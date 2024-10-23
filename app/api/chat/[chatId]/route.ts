@@ -13,7 +13,10 @@ export async function POST(
   { params }: { params: { chatId: string } }
 ) {
   try {
-    const { prompt } = await request.json();
+    const { prompt } = await request.json(); // Corrected destructuring
+    console.log(`prompt: `, prompt);
+    console.log(typeof prompt); // Will log the type of prompt
+
     const user = await currentUser();
 
     if (!user || !user.firstName || !user.id) {
@@ -25,6 +28,11 @@ export async function POST(
 
     if (!success) {
       return new NextResponse("rateLimit exceeded", { status: 429 });
+    }
+
+    // Ensure `prompt` is valid before proceeding
+    if (typeof prompt !== "string" || prompt.trim() === "") {
+      return new NextResponse("Invalid prompt", { status: 400 });
     }
 
     const companion = await prismadb.companion.update({
