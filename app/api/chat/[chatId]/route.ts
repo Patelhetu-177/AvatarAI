@@ -1,4 +1,3 @@
-import { streamText } from "ai";
 import { LangChainStream } from "ai"; // Ensure this is the correct import
 import { currentUser } from "@clerk/nextjs/server";
 import { Replicate } from "@langchain/community/llms/replicate";
@@ -86,9 +85,9 @@ export async function POST(
       apiKey: process.env.REPLICATE_API_TOKEN,
       callbackManager: CallbackManager.fromHandlers({
         handleLLMNewToken: (token) => writer.write(token),
-        handleLLMStart: (_llm, _prompts, runId) => {},
-        handleLLMEnd: (_output, runId) => writer.close(),
-        handleLLMError: (e, runId) => writer.close(),
+        handleLLMStart: () => {},
+        handleLLMEnd: () => writer.close(),
+        handleLLMError: () => writer.close(),
       }),
     });
 
