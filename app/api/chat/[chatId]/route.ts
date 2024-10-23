@@ -92,10 +92,15 @@ export async function POST(
       input: { max_length: 2048 },
       apiKey: process.env.REPLICATE_API_TOKEN,
       callbackManager: CallbackManager.fromHandlers({
+        // handleLLMNewToken: (token) => writer.write(token),
+        // handleLLMStart: () => {},
+        // handleLLMEnd: () => writer.close(),
+        // handleLLMError: () => writer.close(),
+
         handleLLMNewToken: (token) => writer.write(token),
-        handleLLMStart: () => {},
-        handleLLMEnd: () => writer.close(),
-        handleLLMError: () => writer.close(),
+        // handleLLMStart: (_llm, _prompts) => {},
+        // handleLLMEnd: (_output) => writer.close(),
+        // handleLLMError: () => writer.close(),
       }),
     });
 
