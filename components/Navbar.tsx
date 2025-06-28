@@ -27,7 +27,7 @@ export const Navbar = () => {
               font.className
             )}
           >
-            TattvaAI
+            Avatar<span className="text-green-600 text-2xl">AI</span>
           </h1>
         </Link>
       </div>
