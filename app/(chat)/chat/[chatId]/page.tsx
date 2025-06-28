@@ -15,7 +15,7 @@ const ChatIdPage = async ({ params }: ChatIdPageProps) => {
   const { userId } = auth();
 
   if (!userId) {
-    return redirect("/sign-in"); // ✅ This is the correct way
+    return redirect("/sign-in"); 
   }
 
   const companion = await prismadb.companion.findUnique({
