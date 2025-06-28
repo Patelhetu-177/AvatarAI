@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Categories } from "@/components/categories";
 import { Companions } from "@/components/companions";
 import { SearchInput } from "@/components/search-input";

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import prismadb from "@/lib/prismadb";
 import { CompanionForm } from "./components/companion-form";
 import { auth } from "@clerk/nextjs/server";
