@@ -1,44 +1,51 @@
-import { LangChainStream } from "ai"; // Ensure this is the correct import
+import { LangChainStream } from "ai";
 import { currentUser } from "@clerk/nextjs/server";
-import { Replicate } from "@langchain/community/llms/replicate";
-import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { NextResponse } from "next/server";
 
 import { MemoryManager } from "@/lib/memory";
 import { rateLimit } from "@/lib/rate-limit";
 import prismadb from "@/lib/prismadb";
 
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
+
 export async function POST(
   request: Request,
   { params }: { params: { chatId: string } }
 ) {
+  console.log("--- Starting POST request for chat ---");
+
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  if (!GEMINI_API_KEY) {
+    console.error("❌ GEMINI_API_KEY is undefined.");
+    return new NextResponse("Server misconfiguration: GEMINI API key missing", {
+      status: 500,
+    });
+  }
+
   try {
-    const { prompt } = await request.json(); // Corrected destructuring
-    console.log(`prompt: `, prompt);
-    console.log(typeof prompt); // Will log the type of prompt
+    const { prompt } = await request.json();
+    console.log("Prompt received:", prompt);
 
     const user = await currentUser();
-
     if (!user || !user.firstName || !user.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const identifier = request.url + "-" + user.id;
     const { success } = await rateLimit(identifier);
-
     if (!success) {
-      return new NextResponse("rateLimit exceeded", { status: 429 });
+      return new NextResponse("Rate limit exceeded", { status: 429 });
     }
 
-    // Ensure `prompt` is valid before proceeding
     if (typeof prompt !== "string" || prompt.trim() === "") {
       return new NextResponse("Invalid prompt", { status: 400 });
     }
 
     const companion = await prismadb.companion.update({
-      where: {
-        id: params.chatId,
-      },
+      where: { id: params.chatId },
       data: {
         messages: {
           create: {
@@ -54,98 +61,123 @@ export async function POST(
       return new NextResponse("Companion not found", { status: 404 });
     }
 
-    const name = companion.id;
-    const companion_file_name = name + ".txt";
-
     const companionKey = {
-      companionName: name,
+      companionName: companion.id,
       userId: user.id,
-      modelName: "llama2-13b",
+      modelName: "gemini-1.5-flash",
     };
 
     const memoryManager = await MemoryManager.getInstance();
-
     const records = await memoryManager.readLatestHistory(companionKey);
     if (records.length === 0) {
       await memoryManager.seedChatHistory(companion.seed, "\n\n", companionKey);
     }
-    await memoryManager.writeToHistory("User: " + prompt + "\n", companionKey);
 
-    const recentChatHistory = await memoryManager.readLatestHistory(
-      companionKey
-    );
+    await memoryManager.writeToHistory(`User: ${prompt}\n`, companionKey);
+    const recentChatHistory = await memoryManager.readLatestHistory(companionKey);
 
     const similarDocs = await memoryManager.vectorSearch(
       recentChatHistory,
-      companion_file_name
+      companion.id + ".txt"
     );
+
     let relevantHistory = "";
-    if (!!similarDocs && similarDocs.length !== 0) {
+    if (similarDocs?.length) {
       relevantHistory = similarDocs.map((doc) => doc.pageContent).join("\n");
     }
 
+    const chatMessages = recentChatHistory
+      .split("\n")
+      .map((line) => {
+        if (line.startsWith("User: ")) {
+          return new HumanMessage(line.replace("User: ", ""));
+        } else if (line.startsWith("AI: ")) {
+          return new AIMessage(line.replace("AI: ", ""));
+        }
+        return null;
+      })
+      .filter(Boolean) as (HumanMessage | AIMessage)[];
+
+    chatMessages.push(new HumanMessage(prompt));
+
     const { stream, writer } = LangChainStream();
 
-    const model = new Replicate({
-      model:
-        "a16z-infra/llama-2-13b-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5",
-      input: { max_length: 2048 },
-      apiKey: process.env.REPLICATE_API_TOKEN,
-      callbackManager: CallbackManager.fromHandlers({
-        // handleLLMNewToken: (token) => writer.write(token),
-        // handleLLMStart: () => {},
-        // handleLLMEnd: () => writer.close(),
-        // handleLLMError: () => writer.close(),
-
+    const model = new ChatGoogleGenerativeAI({
+      model: "models/gemini-1.5-flash", // ✅ CORRECT key & value
+      apiKey: GEMINI_API_KEY, // ✅ Confirmed defined
+      maxOutputTokens: 2048,
+      temperature: 0.7,
+      streaming: true,
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+          threshold: HarmBlockThreshold.BLOCK_NONE,
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_NONE,
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+          threshold: HarmBlockThreshold.BLOCK_NONE,
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+          threshold: HarmBlockThreshold.BLOCK_NONE,
+        },
+      ],
+      callbacks: CallbackManager.fromHandlers({
         handleLLMNewToken: (token) => writer.write(token),
-        // handleLLMStart: (_llm, _prompts) => {},
-        // handleLLMEnd: (_output) => writer.close(),
-        // handleLLMError: () => writer.close(),
+        handleLLMEnd: () => writer.close(),
+        handleLLMError: (e) => {
+          console.error("LLM Error:", e);
+          writer.close();
+        },
       }),
     });
 
-    model.verbose = true;
+    const systemInstruction = `
+You are ${companion.name}.
+${companion.instruction}
 
-    const resp = String(
-      await model.invoke(`
-          ONLY generate plain sentences without prefix of who is speaking. DO NOT use ${companion.name}: prefix.
+Below are relevant details about the context of this conversation:
+${relevantHistory}
+    `;
 
-          ${companion.instruction}
+    const messagesToSend = [
+      new HumanMessage(systemInstruction),
+      ...chatMessages,
+    ];
 
-          Below are relevant details about ${companion.name}'s past and the conversation you are in.
-          ${relevantHistory}
+    const result = await model.invoke(messagesToSend);
 
-          ${recentChatHistory}\n${companion.name}:
-        `)
-    );
+    const response = result?.content?.trim?.() ?? "Sorry, I couldn't generate a response.";
+    const cleanedResponse = response.replaceAll(",", "");
+    const finalText = cleanedResponse.split("\n")[0];
 
-    const cleaned = resp.replaceAll(",", "");
-    const chunks = cleaned.split("\n");
-    const response = chunks[0];
+    await memoryManager.writeToHistory(`AI: ${finalText}\n`, companionKey);
 
-    await memoryManager.writeToHistory("" + response.trim(), companionKey);
-
-    if (response && response.length > 1) {
-      await prismadb.companion.update({
-        where: { id: params.chatId },
-        data: {
-          messages: {
-            create: {
-              content: response.trim(),
-              role: "system",
-              userId: user.id,
-            },
+    await prismadb.companion.update({
+      where: { id: params.chatId },
+      data: {
+        messages: {
+          create: {
+            content: finalText,
+            role: "system",
+            userId: user.id,
           },
         },
-      });
-    }
+      },
+    });
 
     return new Response(stream, {
       status: 200,
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
     });
   } catch (error) {
-    console.log("[CHAT_POST]", error);
+    console.error("[CHAT_POST]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

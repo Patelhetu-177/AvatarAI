@@ -1,6 +1,5 @@
 import { Redis } from "@upstash/redis";
-import { OpenAIEmbeddings } from "@langchain/openai";
-// import { PineconeClient } from "@pinecone-database/pinecone";
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai"; // Changed import
 import { Pinecone } from "@pinecone-database/pinecone";
 import { PineconeStore } from "@langchain/pinecone";
 
@@ -24,9 +23,16 @@ export class MemoryManager {
     if (!process.env.PINECONE_API_KEY) {
       throw new Error("PINECONE_API_KEY is not set");
     }
+    // if (!process.env.PINECONE_ENVIRONMENT) { // Pinecone often needs an environment variable
+    //   throw new Error("PINECONE_ENVIRONMENT is not set");
+    // }
+    if (!process.env.PINECONE_INDEX) {
+        throw new Error("PINECONE_INDEX is not set");
+    }
 
     this.vectorDBClient = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY,
+      // environment: process.env.PINECONE_ENVIRONMENT, // Add environment if needed by your Pinecone setup
     });
   }
 
@@ -34,14 +40,20 @@ export class MemoryManager {
     recentChatHistory: string,
     companionFileName: string
   ) {
-    const pineconeClient = <Pinecone>this.vectorDBClient;
+    const pineconeClient = this.vectorDBClient; // Type assertion not strictly necessary if `this.vectorDBClient` is already `Pinecone`
 
     const pineconeIndex = pineconeClient.Index(
-      process.env.PINECONE_INDEX! || ""
+      process.env.PINECONE_INDEX!
     );
 
+    // IMPORTANT: Use GoogleGenerativeAIEmbeddings here
+    const embeddings = new GoogleGenerativeAIEmbeddings({
+        apiKey: process.env.GEMINI_API_KEY, // Ensure GEMINI_API_KEY is set in your .env
+        modelName: "embedding-001", // This is the recommended Gemini embedding model
+    });
+
     const vectorStore = await PineconeStore.fromExistingIndex(
-      new OpenAIEmbeddings({ openAIApiKey: process.env.OPENAI_KEY }),
+      embeddings, // Pass the Gemini embeddings
       { pineconeIndex }
     );
 
@@ -50,7 +62,7 @@ export class MemoryManager {
       .catch((err: Error) => {
         if (err.message.includes("429")) {
           console.log(
-            "WARNING: API quota exceeded. Please check your OpenAI plan and usage limits."
+            "WARNING: API quota exceeded. Please check your Gemini/Google AI plan and usage limits."
           );
         } else {
           console.log("WARNING: failed to get vector search results.", err);
@@ -98,7 +110,7 @@ export class MemoryManager {
       byScore: true,
     });
 
-    result = result.slice(-30).reverse();
+    result = result.slice(-30).reverse(); // Keep only the last 30 messages
     const recentChats = result.reverse().join("\n");
     return recentChats;
   }
