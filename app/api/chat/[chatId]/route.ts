@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+
+
 import { LangChainStream } from "ai";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -15,11 +18,10 @@ export async function POST(
   request: Request,
   { params }: { params: { chatId: string } }
 ) {
-  console.log("--- Starting POST request for chat ---");
 
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
   if (!GEMINI_API_KEY) {
-    console.error("❌ GEMINI_API_KEY is undefined.");
+    console.error("GEMINI_API_KEY is undefined.");
     return new NextResponse("Server misconfiguration: GEMINI API key missing", {
       status: 500,
     });
@@ -103,8 +105,8 @@ export async function POST(
     const { stream, writer } = LangChainStream();
 
     const model = new ChatGoogleGenerativeAI({
-      model: "models/gemini-1.5-flash", // ✅ CORRECT key & value
-      apiKey: GEMINI_API_KEY, // ✅ Confirmed defined
+      model: "models/gemini-1.5-flash",
+      apiKey: GEMINI_API_KEY, 
       maxOutputTokens: 2048,
       temperature: 0.7,
       streaming: true,
