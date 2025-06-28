@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import prismadb from "@/lib/prismadb";
 import { CompanionForm } from "./components/companion-form";
 import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation"; // ✅ Added
 
 interface CompanionIdPageProps {
   params: {
@@ -14,7 +15,7 @@ const CompanionPage = async ({ params }: CompanionIdPageProps) => {
   const { userId } = auth();
 
   if (!userId) {
-    return auth().redirectToSignIn();
+    return redirect("/sign-in"); // ✅ Fixed redirect
   }
 
   const companion = await prismadb.companion.findUnique({
@@ -26,10 +27,9 @@ const CompanionPage = async ({ params }: CompanionIdPageProps) => {
 
   const categories = await prismadb.category.findMany();
 
-  // If no companion is found, handle null by passing undefined to initialData
   return (
     <CompanionForm
-      initialData={companion ?? undefined} // Use undefined if null
+      initialData={companion ?? undefined}
       categories={categories}
     />
   );

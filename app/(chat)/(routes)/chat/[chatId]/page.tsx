@@ -11,11 +11,11 @@ interface ChatIdPageProps {
   };
 }
 
-const chatIdPage = async ({ params }: ChatIdPageProps) => {
+const ChatIdPage = async ({ params }: ChatIdPageProps) => {
   const { userId } = auth();
 
   if (!userId) {
-    return auth().redirectToSignIn();
+    return redirect("/sign-in"); // ✅ This is the correct way
   }
 
   const companion = await prismadb.companion.findUnique({
@@ -39,12 +39,11 @@ const chatIdPage = async ({ params }: ChatIdPageProps) => {
     },
   });
 
-  if(!companion){
+  if (!companion) {
     return redirect("/");
   }
-  return (
-    <ChatClient companion={companion}/>
-  )
+
+  return <ChatClient companion={companion} />;
 };
 
-export default chatIdPage;
+export default ChatIdPage;
