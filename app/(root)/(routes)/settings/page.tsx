@@ -22,7 +22,7 @@ function SettingsPage() {
         <p className="text-neutral-500 max-w-lg mx-auto my-2 text-sm text-center">
           This Settings page is currently under construction.
           <br />
-          I'm working hard to bring you customization options soon!
+          I&apos;m working hard to bring you customization options soon!
         </p>
 
         <div className="mt-8 text-center">
@@ -30,10 +30,9 @@ function SettingsPage() {
             🚧 Features Coming Soon:
           </p>
           <ul className="text-neutral-400 mt-2 list-disc list-inside text-sm">
-            <li>Change email and password</li>
             <li>Manage notification preferences</li>
-            <li>Theme & accessibility settings</li>
-            <li>Account deletion & export</li>
+            <li>Theme &amp; accessibility settings</li>
+            <li>Account deletion</li>
             <li>Stripe Integration</li>
           </ul>
         </div>
