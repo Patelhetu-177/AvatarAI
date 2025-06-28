@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-
 import { LangChainStream } from "ai";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -18,32 +17,29 @@ export async function POST(
   request: Request,
   { params }: { params: { chatId: string } }
 ) {
-
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-  if (!GEMINI_API_KEY) {
-    console.error("GEMINI_API_KEY is undefined.");
-    return new NextResponse("Server misconfiguration: GEMINI API key missing", {
-      status: 500,
-    });
-  }
-
   try {
-    const { prompt } = await request.json();
-    console.log("Prompt received:", prompt);
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_API_KEY) {
+      console.error("GEMINI_API_KEY is undefined.");
+      return new NextResponse("Missing API Key", { status: 500 });
+    }
 
-    const user = await currentUser();
-    if (!user || !user.firstName || !user.id) {
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body.prompt !== "string" || body.prompt.trim() === "") {
+      return new NextResponse("Invalid prompt", { status: 400 });
+    }
+
+    const prompt = body.prompt.trim();
+
+    const user = await currentUser().catch(() => null);
+    if (!user?.id || !user?.firstName) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const identifier = request.url + "-" + user.id;
+    const identifier = `${request.url}-${user.id}`;
     const { success } = await rateLimit(identifier);
     if (!success) {
       return new NextResponse("Rate limit exceeded", { status: 429 });
-    }
-
-    if (typeof prompt !== "string" || prompt.trim() === "") {
-      return new NextResponse("Invalid prompt", { status: 400 });
     }
 
     const companion = await prismadb.companion.update({
@@ -83,10 +79,9 @@ export async function POST(
       companion.id + ".txt"
     );
 
-    let relevantHistory = "";
-    if (similarDocs?.length) {
-      relevantHistory = similarDocs.map((doc) => doc.pageContent).join("\n");
-    }
+    const relevantHistory = similarDocs?.length
+      ? similarDocs.map((doc) => doc.pageContent).join("\n")
+      : "";
 
     const chatMessages = recentChatHistory
       .split("\n")
@@ -106,7 +101,7 @@ export async function POST(
 
     const model = new ChatGoogleGenerativeAI({
       model: "models/gemini-1.5-flash",
-      apiKey: GEMINI_API_KEY, 
+      apiKey: GEMINI_API_KEY,
       maxOutputTokens: 2048,
       temperature: 0.7,
       streaming: true,
@@ -146,21 +141,16 @@ Below are relevant details about the context of this conversation:
 ${relevantHistory}
     `;
 
-    const messagesToSend = [
+    const result = await model.invoke([
       new HumanMessage(systemInstruction),
       ...chatMessages,
-    ];
-const result = await model.invoke(messagesToSend);
+    ]);
 
-const rawContent =
-  typeof result.content === "string"
-    ? result.content
-    : JSON.stringify(result.content); // fallback if it's complex content
-
-const response = rawContent.trim();
-const cleanedResponse = response.replaceAll(",", "");
-const finalText = cleanedResponse.split("\n")[0];
-
+    const rawContent =
+      typeof result.content === "string"
+        ? result.content
+        : JSON.stringify(result.content);
+    const finalText = rawContent.trim().replaceAll(",", "").split("\n")[0];
 
     await memoryManager.writeToHistory(`AI: ${finalText}\n`, companionKey);
 
@@ -184,7 +174,7 @@ const finalText = cleanedResponse.split("\n")[0];
       },
     });
   } catch (error) {
-    console.error("[CHAT_POST]", error);
+    console.error("[CHAT_POST ERROR]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
