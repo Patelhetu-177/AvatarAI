@@ -148,12 +148,17 @@ ${relevantHistory}
       new HumanMessage(systemInstruction),
       ...chatMessages,
     ];
+const result = await model.invoke(messagesToSend);
 
-    const result = await model.invoke(messagesToSend);
+const rawContent =
+  typeof result.content === "string"
+    ? result.content
+    : JSON.stringify(result.content); // fallback if it's complex content
 
-    const response = result?.content?.trim?.() ?? "Sorry, I couldn't generate a response.";
-    const cleanedResponse = response.replaceAll(",", "");
-    const finalText = cleanedResponse.split("\n")[0];
+const response = rawContent.trim();
+const cleanedResponse = response.replaceAll(",", "");
+const finalText = cleanedResponse.split("\n")[0];
+
 
     await memoryManager.writeToHistory(`AI: ${finalText}\n`, companionKey);
 
