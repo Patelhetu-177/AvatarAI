@@ -272,7 +272,7 @@ export function CompanionForm({ initialData, categories }: CompanionFormProps) {
           />
           <div className="w-full flex justify-center">
             <Button size="lg" disabled={isLoading}>
-              {initialData ? "Edit your companion" : "Create your companion"}
+              {initialData ? "Edit your Avatar" : "Create your Avatar"}
               <Wand2 className="w-4 h-4 ml-2" />
             </Button>
           </div>
