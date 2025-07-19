@@ -21,13 +21,12 @@ async function main() {
         {
           name: "Movies & TV",
         },
-
         {
           name: "Animals",
         },
         {
-            name: "Scientists" 
-         },
+          name: "Scientists",
+        },
       ],
     });
   } catch (error) {
@@ -36,6 +35,5 @@ async function main() {
     await db.$disconnect();
   }
 }
-
 
 main();

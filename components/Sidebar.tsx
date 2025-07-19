@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Contact2, Home, Plus, Settings } from "lucide-react";
+import { Contact2, Home, Plus, Settings, Brain } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 
@@ -21,6 +21,12 @@ export const Sidebar = () => {
       href: "/companion/new",
       lable: "Create",
       pro: true,
+    },
+    {
+      icon: Brain, 
+      href: "/interviewz", 
+      lable: "InterviewMate", 
+      pro: true, 
     },
     {
       icon: Settings,

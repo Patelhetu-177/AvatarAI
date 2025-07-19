@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+  previewFeatures = ["fullTextIndex", "fullTextSearch"]
 }
 
 datasource db {
@@ -9,48 +9,63 @@ datasource db {
 }
 
 model Category {
-  id         String      @id @default(uuid())
-  name       String
-  companions Companion[]
+  id              String          @id @default(uuid())
+  name            String
+  companions      Companion[]
 }
 
 model Companion {
-  id          String @id @default(uuid())
+  id          String    @id @default(uuid())
   userId      String
-  userName    String
+  userName    String?
   src         String
-  name        String @db.Text
+  name        String
   description String
-  instruction String @db.Text
-  seed        String @db.Text
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  category   Category @relation(fields: [categoryId], references: [id])
-  categoryId String
-
-  messages Message[]
+  instruction String    @db.Text
+  seed        String    @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  messages    Message[]
 
   @@index([categoryId])
+}
+
+model InterviewMate {
+  id          String    @id @default(uuid())
+  userId      String
+  userName    String?
+  src         String
+  name        String
+  description String
+  instruction String    @db.Text
+  seed        String    @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  messages    Message[]
+
+}
+
+model Message {
+  id               String        @id @default(uuid())
+  role             Role
+  content          String        @db.Text
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  userId           String
+
+  companionId      String?
+  interviewMateId  String?
+
+  companion        Companion?    @relation(fields: [companionId], references: [id], onDelete: Cascade)
+  interviewMate    InterviewMate? @relation(fields: [interviewMateId], references: [id], onDelete: Cascade)
+
+  @@index([companionId])
+  @@index([interviewMateId])
 }
 
 enum Role {
   user
   system
-}
-
-model Message {
-  id        String   @id @default(uuid())
-  role      Role
-  content   String   @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  companionId String
-  userId      String
-
-  companion Companion @relation(fields: [companionId], references: [id], onDelete: Cascade)
-
-  @@index([companionId])
 }

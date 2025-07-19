@@ -45,7 +45,9 @@ export const Companions = ({ data }: CompanionProps) => {
               <p className="text-sm">{item.description}</p>
             </CardHeader>
             <CardFooter className="flex items-center justify-between text-xs text-muted-foreground">
-              <p className="lowercase">@{item.userName.split("@")[0]}</p>
+              <p className="lowercase">
+                {item.userName ? `@${item.userName.split("@")[0]}` : "@"}
+              </p>
               <div className="flex items-center">
                 <MessagesSquare className="w-3 h-3 mr-1" />
                 {item._count.messages}

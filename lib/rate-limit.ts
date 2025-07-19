@@ -13,9 +13,8 @@ export async function rateLimit(identifier: string) {
         const result = await rateLimit.limit(identifier);
         return {
             success: true,
-            remaining: result.remaining, // Include remaining requests if needed
-            reset: result.reset, // Include reset time if needed
-            // Add any other relevant fields from result here, excluding `success`
+            remaining: result.remaining, 
+            reset: result.reset, 
         };
     } catch (error) {
         console.error('Rate limit error:', error);

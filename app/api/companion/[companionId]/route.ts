@@ -1,3 +1,4 @@
+// api/companion/[companionId]/route.ts
 export const dynamic = "force-dynamic";
 
 import prismadb from "@/lib/prismadb";
@@ -48,8 +49,6 @@ export async function PATCH(
     return new NextResponse("Internal error", { status: 500 });
   }
 }
-
-
 
 export async function DELETE(
   req: Request,

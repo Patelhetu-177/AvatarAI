@@ -1,6 +1,7 @@
+// components/chat-header.tsx
 "use client";
 
-import { Companion, Message } from "@prisma/client";
+import { Companion, Message, InterviewMate } from "@prisma/client";
 import { Button } from "./ui/button";
 import {
   ChevronLeft,
@@ -9,7 +10,7 @@ import {
   MoreVertical,
   Trash,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { BotAvatar } from "./bot-avatar";
 import { useUser } from "@clerk/nextjs";
 import {
@@ -21,24 +22,38 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 
-interface ChatHeaderProps {
-  companion: Companion & {
+type AiEntity = (
+  (Companion & {
     messages: Message[];
-    _count: {
-      messages: number;
-    };
-  };
+    _count: { messages: number };
+  }) |
+  (InterviewMate & {
+    messages: Message[];
+    _count: { messages: number };
+  })
+);
+
+interface ChatHeaderProps {
+  companion: AiEntity;
+  aiType: "companion" | "interviewMate";
 }
 
-export const ChatHeader = ({ companion }: ChatHeaderProps) => {
+export const ChatHeader = ({ companion, aiType }: ChatHeaderProps) => {
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useUser();
-
   const { toast } = useToast();
 
   const onDelete = async () => {
     try {
-      await axios.delete(`/api/companion/${companion.id}`);
+      let apiEndpoint: string;
+      if (aiType === "interviewMate") {
+        apiEndpoint = `/api/interviewmate/${companion.id}`;
+      } else {
+        apiEndpoint = `/api/companion/${companion.id}`;
+      }
+
+      await axios.delete(apiEndpoint);
 
       toast({
         description: "Success."
@@ -54,8 +69,16 @@ export const ChatHeader = ({ companion }: ChatHeaderProps) => {
     }
   };
 
+  const getEditUrl = () => {
+    if (aiType === "interviewMate") {
+      return `/interviewz/${companion.id}`;
+    } else {
+      return `/companion/${companion.id}`;
+    }
+  };
+
   return (
-    <div className="flex w-full justify-between items-center border-b border-primary">
+    <div className="flex w-full justify-between items-center border-b border-primary/10 pb-4">
       <div className="flex gap-x-2 items-center">
         <Button onClick={() => router.back()} size="icon" variant="ghost">
           <ChevronLeft className="h-8 w-8" />
@@ -82,9 +105,7 @@ export const ChatHeader = ({ companion }: ChatHeaderProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={() => router.push(`/companion/${companion.id}`)}
-            >
+            <DropdownMenuItem onClick={() => router.push(getEditUrl())}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
             </DropdownMenuItem>
