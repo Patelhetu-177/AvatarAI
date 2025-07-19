@@ -1,10 +1,9 @@
-// app/chat/[chatId]/components/client.tsx
 "use client";
 
 import { ChatHeader } from "@/components/chat-header";
 import { Companion, Message, InterviewMate } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState, useEffect, useRef } from "react";
+import { FormEvent, useState, useEffect} from "react";
 import { ChatForm } from "@/components/chat-form";
 import { ChatMessages } from "@/components/chat-messages";
 import { ChatMessageProps } from "@/components/chat-message";
@@ -134,13 +133,16 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
           return current;
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // Changed to unknown
       console.error("Error sending message or processing stream:", error);
+      let errorMessage = "Unknown error.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       toast({
         variant: "destructive",
-        description: `Failed to get response: ${
-          error.message || "Unknown error."
-        }`,
+        description: `Failed to get response: ${errorMessage}`,
         duration: 5000,
       });
       setMessages((current) => {
@@ -148,7 +150,7 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
           const updatedMessages = [...current];
           updatedMessages[messageIndexToUpdate] = {
             ...updatedMessages[messageIndexToUpdate],
-            content: `Error: ${error.message || "Could not get a response."}`,
+            content: `Error: ${errorMessage}`,
             isError: true,
           } as ChatMessageProps;
           return updatedMessages;
@@ -157,7 +159,7 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
           ...current,
           {
             role: "system",
-            content: `Error: ${error.message || "Could not get a response."}`,
+            content: `Error: ${errorMessage}`,
             isError: true,
           } as ChatMessageProps,
         ];
@@ -201,13 +203,16 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
 
       setMessages((current) => current.filter((msg) => msg.id !== messageId));
       router.refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // Changed to unknown
       console.error("Error deleting message:", error);
+      let errorMessage = "Unknown error.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       toast({
         variant: "destructive",
-        description: `Failed to delete message: ${
-          error.message || "Unknown error."
-        }`,
+        description: `Failed to delete message: ${errorMessage}`,
         duration: 5000,
       });
     }

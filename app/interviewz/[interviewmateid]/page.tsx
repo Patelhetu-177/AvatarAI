@@ -3,7 +3,7 @@ import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { InterviewMateForm } from "./components/interview-mate-form";
-import { InterviewMate, Prisma } from "@prisma/client"; 
+import { InterviewMate } from "@prisma/client"; 
 
 export const dynamic = "force-dynamic";
 

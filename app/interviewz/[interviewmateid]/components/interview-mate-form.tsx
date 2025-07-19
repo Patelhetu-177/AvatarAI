@@ -22,9 +22,8 @@ import { Button } from "@/components/ui/button";
 import { Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { InterviewMate } from "@prisma/client"; // Category import removed
+import { InterviewMate } from "@prisma/client";
 
-// Define PREAMBLE and SEED_CHAT examples for different interview topics
 const DSA_PREAMBLE = `You are a Data Structures and Algorithms (DSA) interview preparation mate. Your goal is to help a user practice common DSA problems, explain concepts clearly, provide hints, and offer constructive feedback. You should act as an encouraging interviewer. Focus on common patterns, time and space complexity, and different approaches to problems. Avoid giving away the full solution directly.`;
 const DSA_SEED_CHAT = `Human: Can you give me a medium-level array problem?
 DSA InterviewMate: Certainly! Consider this: Given an array of integers, return indices of the two numbers such that they add up to a specific target. You may assume that each input would have exactly one solution, and you may not use the same element twice. What's your initial thought process for approaching this?
@@ -45,7 +44,6 @@ OOPs InterviewMate: Precisely! That's an excellent example of runtime polymorphi
 Human: Overloading is having multiple methods with the same name but different parameters in the same class. Overriding is in subclasses.
 OOPs InterviewMate: Spot on! You've got a solid grasp of it. Let's move on to the next principle: Encapsulation. What is it, and why is it important in software design?`;
 
-// Add JAVASCRIPT_PREAMBLE and JAVASCRIPT_SEED_CHAT if you want to use them as defaults
 const JAVASCRIPT_PREAMBLE = `You are a JavaScript interview preparation mate. Your primary role is to act as an interviewer and tutor, helping the user master JavaScript concepts and common interview questions. Your responses should be clear, concise, and provide guidance without directly solving problems.`;
 const JAVASCRIPT_SEED_CHAT = `Human: Can you explain the difference between '==' and '===' in JavaScript?
 JavaScript InterviewMate: Absolutely! This is a fundamental concept. '==' is the loose equality operator, which performs type coercion before comparison. '===' is the strict equality operator, which compares both value and type without coercion. Can you give me an example where '==' might produce an unexpected result due to type coercion?
@@ -66,11 +64,9 @@ const formSchema = z.object({
   instruction: z
     .string()
     .min(200, { message: "Instruction requires at least 200 characters" }),
-  seed: z
-    .string()
-    .min(200, {
-      message: "Example conversation requires at least 200 characters",
-    }),
+  seed: z.string().min(200, {
+    message: "Example conversation requires at least 200 characters",
+  }),
   src: z.string().min(1, { message: "Image is required" }),
 });
 
@@ -93,18 +89,10 @@ export function InterviewMateForm({ initialData }: InterviewMateFormProps) {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const DEFAULT_INTERVIEW_CATEGORY_ID =
-        "YOUR_DEFAULT_INTERVIEW_CATEGORY_ID"; // <<< IMPORTANT: REPLACE THIS!
-
-      const dataToSubmit = {
-        ...values,
-        categoryId: DEFAULT_INTERVIEW_CATEGORY_ID,
-      };
-
       if (initialData) {
-        await axios.patch(`/api/interviewmate/${initialData.id}`, dataToSubmit);
+        await axios.patch(`/api/interviewmate/${initialData.id}`, values);
       } else {
-        await axios.post("/api/interviewmate", dataToSubmit);
+        await axios.post("/api/interviewmate", values);
       }
       toast({ description: "Success" });
 
@@ -119,8 +107,25 @@ export function InterviewMateForm({ initialData }: InterviewMateFormProps) {
     }
   };
 
-  let preamblePlaceholder = DSA_PREAMBLE;
-  let seedChatPlaceholder = DSA_SEED_CHAT;
+  const currentName = form.watch("name").toLowerCase();
+  let preamblePlaceholder: string;
+  let seedChatPlaceholder: string;
+
+  if (currentName.includes("dsa")) {
+    preamblePlaceholder = DSA_PREAMBLE;
+    seedChatPlaceholder = DSA_SEED_CHAT;
+  } else if (currentName.includes("oops")) {
+    preamblePlaceholder = OOPS_PREAMBLE;
+    seedChatPlaceholder = OOPS_SEED_CHAT;
+  } else if (currentName.includes("javascript") || currentName.includes("js")) {
+    preamblePlaceholder = JAVASCRIPT_PREAMBLE;
+    seedChatPlaceholder = JAVASCRIPT_SEED_CHAT;
+  } else {
+    // Default or generic interview prep
+    preamblePlaceholder = `You are an interview preparation mate for a specific topic. Your goal is to help a user practice common interview questions, explain concepts clearly, provide hints, and offer constructive feedback. You should act as an encouraging interviewer.`;
+    seedChatPlaceholder = `Human: Can you ask me a question about this topic?
+AI InterviewMate: Absolutely! Let's start with a foundational concept. [Insert initial question here]`;
+  }
 
   return (
     <div className="h-full p-4 space-y-2 max-w-3xl mx-auto">

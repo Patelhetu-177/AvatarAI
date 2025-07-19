@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import prismadb from "@/lib/prismadb";
-import { InterviewMate } from "@prisma/client";
+import { InterviewMate} from "@prisma/client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -25,11 +25,14 @@ const InterviewzPage = async ({ searchParams }: InterviewzPageProps) => {
     return redirect("/sign-in");
   }
 
-  const interviewMates = await prismadb.interviewMate.findMany({
+  const interviewMates: (InterviewMate & {
+    _count: { messages: number };
+  })[] = await prismadb.interviewMate.findMany({
     where: {
       userId,
-      name: searchParams.name ? { contains: searchParams.name, mode: 'insensitive' } : undefined,
-      categoryId: searchParams.categoryId,
+      name: searchParams.name
+        ? { contains: searchParams.name, mode: "insensitive" }
+        : undefined,
     },
     orderBy: {
       createdAt: "desc",
@@ -55,7 +58,7 @@ const InterviewzPage = async ({ searchParams }: InterviewzPageProps) => {
         </Link>
       </div>
 
-      <SearchInput /> 
+      <SearchInput />
 
       <InterviewMateList interviewMates={interviewMates} />
     </div>

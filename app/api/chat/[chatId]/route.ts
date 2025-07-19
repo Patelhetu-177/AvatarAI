@@ -165,7 +165,8 @@ export async function POST(
       callbacks: CallbackManager.fromHandlers({
         handleLLMNewToken: (token) => writer.write(token),
         handleLLMEnd: () => writer.close(),
-        handleLLMError: (e) => {
+        handleLLMError: (e: Error) => {
+          // Explicitly type 'e' as Error
           console.error("LLM Error:", e);
           writer.close();
         },
@@ -233,38 +234,43 @@ Remember to keep responses natural, engaging, and aligned with your persona.
         "Content-Type": "text/plain; charset=utf-8",
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    // Change error type to unknown
     console.error("[CHAT_POST ERROR]", error);
 
     let errorMessage = "An unexpected error occurred. Please try again later.";
     let statusCode = 500;
 
-    if (error.status) {
-      statusCode = error.status;
-      if (error.status === 503) {
-        errorMessage =
-          "I'm a bit overwhelmed right now. Please try asking again in a minute.";
-      } else if (error.status === 429) {
-        errorMessage =
-          "Too many requests! Please slow down and try again shortly.";
-      } else if (error.status >= 400 && error.status < 500) {
-        errorMessage =
-          "There was a problem with your request. Please check your input and try again.";
-      } else {
-        errorMessage =
-          "I'm having trouble connecting to my brain. Please try again soon!";
-      }
-    } else if (error.message) {
-      if (
-        error.message.includes(
-          "Error fetching from https://generativelanguage.googleapis.com"
-        )
-      ) {
-        errorMessage =
-          "I'm having trouble connecting to my brain. Please try again soon!";
-      } else if (error.message.includes("Rate limit exceeded")) {
-        errorMessage =
-          "You're sending too many messages. Please wait a moment before trying again.";
+    if (error instanceof Error) {
+      // Use instanceof to narrow type
+      if ("status" in error && typeof error.status === "number") {
+        // Check for status property
+        statusCode = error.status;
+        if (error.status === 503) {
+          errorMessage =
+            "I'm a bit overwhelmed right now. Please try asking again in a minute.";
+        } else if (error.status === 429) {
+          errorMessage =
+            "Too many requests! Please slow down and try again shortly.";
+        } else if (error.status >= 400 && error.status < 500) {
+          errorMessage =
+            "There was a problem with your request. Please check your input and try again.";
+        } else {
+          errorMessage =
+            "I'm having trouble connecting to my brain. Please try again soon!";
+        }
+      } else if (error.message) {
+        if (
+          error.message.includes(
+            "Error fetching from https://generativelanguage.googleapis.com"
+          )
+        ) {
+          errorMessage =
+            "I'm having trouble connecting to my brain. Please try again soon!";
+        } else if (error.message.includes("Rate limit exceeded")) {
+          errorMessage =
+            "You're sending too many messages. Please wait a moment before trying again.";
+        }
       }
     }
 

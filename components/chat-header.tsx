@@ -10,7 +10,7 @@ import {
   MoreVertical,
   Trash,
 } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { BotAvatar } from "./bot-avatar";
 import { useUser } from "@clerk/nextjs";
 import {
@@ -40,7 +40,6 @@ interface ChatHeaderProps {
 
 export const ChatHeader = ({ companion, aiType }: ChatHeaderProps) => {
   const router = useRouter();
-  const pathname = usePathname();
   const { user } = useUser();
   const { toast } = useToast();
 
