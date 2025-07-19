@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import prismadb from "@/lib/prismadb";
-import { InterviewMate, Message } from "@prisma/client";
+import { InterviewMate} from "@prisma/client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -29,7 +29,6 @@ const InterviewzPage = async ({ searchParams }: InterviewzPageProps) => {
     _count: { messages: number };
   })[] = await prismadb.interviewMate.findMany({
     where: {
-      // userId filter removed to make all InterviewMates visible to all users
       name: searchParams.name
         ? { contains: searchParams.name, mode: "insensitive" }
         : undefined,
