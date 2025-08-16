@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Contact2, Home, Plus, Settings, Brain } from "lucide-react";
+import { Contact2, Home, Settings, Brain , BotIcon} from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 
@@ -17,16 +17,16 @@ export const Sidebar = () => {
       pro: false,
     },
     {
-      icon: Plus,
-      href: "/companion/new",
-      lable: "Create",
+      icon: BotIcon,
+      href: "/companion",
+      lable: "Companion",
       pro: true,
     },
     {
-      icon: Brain, 
-      href: "/interviewz", 
-      lable: "InterviewMate", 
-      pro: true, 
+      icon: Brain,
+      href: "/interviewz",
+      lable: "InterviewMate",
+      pro: true,
     },
     {
       icon: Settings,
