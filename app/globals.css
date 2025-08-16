@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 html,
 body,
 :root{
@@ -13,12 +12,35 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/*
+  Custom CSS variables from the other project. 
+  Note: some of these may overlap with the ones already in your project.
+  It's best to consolidate them to a single source of truth.
+*/
+:root {
+  --color-success-100: #49de50;
+  --color-success-200: #42c748;
+  --color-destructive-100: #f75353;
+  --color-destructive-200: #c44141;
+
+  --color-primary-100: #dddfff;
+  --color-primary-200: #cac5fe;
+
+  --color-light-100: #d6e0ff;
+  --color-light-400: #6870a6;
+  --color-light-600: #4f557d;
+  --color-light-800: #24273a;
+
+  --color-dark-100: #020408;
+  --color-dark-200: #27282f;
+  --color-dark-300: #242633;
+
+  --font-mona-sans: "Mona Sans", sans-serif;
+
+  --bg-pattern: url("/pattern.png");
 }
 
+/* Base styles and variables from your original project */
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -73,13 +95,54 @@ body {
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
-}
 
-@layer base {
+  /* Combined base styles */
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Custom utility and component classes combined */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Utilities from your other project */
+  .dark-gradient {
+    @apply bg-gradient-to-b from-[#1A1C20] to-[#08090D];
+  }
+  .border-gradient {
+    @apply bg-gradient-to-b from-[#4B4D4F] to-[#4B4D4F33];
+  }
+  .pattern {
+    @apply bg-[url('/pattern.png')] bg-top bg-no-repeat;
+  }
+  .blue-gradient-dark {
+    @apply bg-gradient-to-b from-[#171532] to-[#08090D];
+  }
+  .blue-gradient {
+    @apply bg-gradient-to-l from-[#FFFFFF] to-[#CAC5FE];
+  }
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+}
+
+/* The @keyframes rule must be at the top level, outside of any @layer. */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

@@ -12,10 +12,10 @@ export function HeroSection() {
         </h1>
         <p className="mt-4 text-gray-700 dark:text-gray-400 text-lg md:text-xl max-w-lg mx-auto">
           Experience next-level conversations with AvatarAI — your gateway to
-          lifelike chats with AI-powered versions of celebrities, historical
-          icons, industry experts, and custom companions you create. Whether
-          you’re preparing for an interview, learning a new skill, or just
-          having fun, our AI voices make every interaction feel real.
+          lifelike chats with AI-powered versions of celebrities, industry
+          experts. Whether you’re preparing for an interview, learning a new
+          skill, or just having fun, our AI voices make every interaction feel
+          real.
         </p>
       </div>
     </BackgroundLines>

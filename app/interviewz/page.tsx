@@ -50,7 +50,7 @@ const InterviewzPage = async ({ searchParams }: InterviewzPageProps) => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Interview Preparation Mates</h2>
         <Link href="/interviewz/new">
-          <Button>
+          <Button className="bg-teal-500 hover:bg-teal-600 text-white">
             <PlusCircle className="w-4 h-4 mr-2" />
             Create InterviewMate
           </Button>

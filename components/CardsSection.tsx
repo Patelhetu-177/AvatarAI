@@ -15,20 +15,20 @@ const slides = [
       "Engage in dynamic, personalized conversations with your favorite celebrities, historical figures, or fictional characters.",
   },
   {
-    title: "Ace Your Interview",
+    title: "Learn a New Skill",
     button: "Start Learning",
     src: "/interview.png",
     route: "/interviewz",
     content:
-      "Practice with an AI that provides real-time feedback on your answers and helps you prepare for any interview scenario.",
+      "Access interactive tutorials and expert guidance to master new skills at your own pace, from coding to creative writing",
   },
   {
-    title: "Learn a New Skill",
+    title: "Ace Your Interview",
     button: "Practice Now",
     src: "/learning.png",
     route: "/skillwise",
     content:
-      "Access interactive tutorials and expert guidance to master new skills at your own pace, from coding to creative writing.",
+      "Practice with an AI that provides real-time feedback on your answers and helps you prepare for any interview scenario.",
   },
 ];
 
@@ -36,13 +36,12 @@ export function CardsSection() {
   return (
     <div className="min-h-screen bg-white dark:bg-black py-12 pt-36">
       <h1 className="text-lg md:text-7xl text-center font-sans font-bold mb-8 text-black dark:text-white">
-        Features  ({slides.length})
+        Features ({slides.length})
       </h1>
       <div className="flex flex-wrap justify-center">
         {slides.map((slide, index) => (
           <CardContainer key={index} className="inter-var m-4">
             <CardBody className="bg-white dark:bg-black relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] border border-black/[0.1] dark:border-white/[0.2] w-auto sm:w-[30rem] h-auto rounded-xl p-6">
-              
               <CardItem
                 translateZ="50"
                 className="text-xl font-bold text-black dark:text-white"

@@ -31,7 +31,7 @@ const CompanionsPage = async ({ searchParams }: CompanionsPageProps) => {
       name: searchParams.name
         ? { contains: searchParams.name, mode: "insensitive" }
         : undefined,
-      userId: userId, // Added a where clause to filter by the current user's id
+      // userId: userId, // Added a where clause to filter by the current user's id
     },
     orderBy: {
       createdAt: "desc",
@@ -51,7 +51,7 @@ const CompanionsPage = async ({ searchParams }: CompanionsPageProps) => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Your Companions</h2>
         <Link href="/companion/new">
-          <Button>
+          <Button className="bg-teal-500 hover:bg-teal-600 text-white">
             <PlusCircle className="w-4 h-4 mr-2" />
             Create Companion
           </Button>
