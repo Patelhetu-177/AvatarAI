@@ -3,13 +3,13 @@
 import { ChatHeader } from "@/components/chat-header";
 import { Companion, Message, InterviewMate } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState, useEffect} from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { ChatForm } from "@/components/chat-form";
 import { ChatMessages } from "@/components/chat-messages";
 import { ChatMessageProps } from "@/components/chat-message";
 import LanguageDropdown from "./LanguageDropdown";
 import i18n from "@/lib/i18n";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 import { useToast } from "@/hooks/use-toast";
 
 type AiEntity =
@@ -30,6 +30,7 @@ interface ChatClientProps {
 export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
   const router = useRouter();
   const { user } = useUser();
+  const { getToken } = useAuth();
   const { toast } = useToast();
 
   const [messages, setMessages] = useState<ChatMessageProps[]>(
@@ -41,10 +42,9 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
   );
   const [currentLanguage, setCurrentLanguage] = useState<string>("en");
   const [isLoadingResponse, setIsLoadingResponse] = useState<boolean>(false);
-  const [showTypingIndicator, setShowTypingIndicator] =
-    useState<boolean>(false);
-
+  const [isTyping, setIsTyping] = useState<boolean>(false);
   const [input, setInput] = useState<string>("");
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -56,16 +56,31 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
       setCurrentLanguage(i18n.language);
     };
     i18n.on("languageChanged", handleLanguageChange);
-
     setCurrentLanguage(i18n.language);
-
     return () => {
       i18n.off("languageChanged", handleLanguageChange);
     };
   }, []);
+  
+  useEffect(() => {
+    if (isLoadingResponse) {
+      setIsTyping(true);
+    } else {
+      setIsTyping(false);
+    }
+  }, [isLoadingResponse]);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!user) {
+      toast({
+        variant: "destructive",
+        description: "You must be logged in to chat.",
+        duration: 3000,
+      });
+      return;
+    }
 
     const userMessage: ChatMessageProps = {
       role: "user",
@@ -74,9 +89,7 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
 
     setMessages((current) => [...current, userMessage]);
     setInput("");
-
     setIsLoadingResponse(true);
-    setShowTypingIndicator(true);
 
     let accumulatedResponse = "";
     let messageIndexToUpdate = -1;
@@ -91,10 +104,16 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
     });
 
     try {
+      const authToken = await getToken();
+      if (!authToken) {
+        throw new Error("Authentication token not available.");
+      }
+
       const response = await fetch(`/api/chat/${initialData.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({
           prompt: userMessage.content,
@@ -134,7 +153,6 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
         });
       }
     } catch (error: unknown) {
-      // Changed to unknown
       console.error("Error sending message or processing stream:", error);
       let errorMessage = "Unknown error.";
       if (error instanceof Error) {
@@ -166,7 +184,6 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
       });
     } finally {
       setIsLoadingResponse(false);
-      setShowTypingIndicator(false);
       router.refresh();
     }
   };
@@ -182,10 +199,15 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
     }
 
     try {
+      const authToken = await getToken();
+      if (!authToken) {
+        throw new Error("Authentication token not available.");
+      }
       const response = await fetch(`/api/chat/message/${messageId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
         },
       });
 
@@ -204,7 +226,6 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
       setMessages((current) => current.filter((msg) => msg.id !== messageId));
       router.refresh();
     } catch (error: unknown) {
-      // Changed to unknown
       console.error("Error deleting message:", error);
       let errorMessage = "Unknown error.";
       if (error instanceof Error) {
@@ -226,7 +247,7 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
       </div>
       <ChatMessages
         companion={initialData}
-        isLoading={showTypingIndicator}
+        isLoading={isTyping}
         messages={messages}
         onDelete={onDeleteMessage}
       />

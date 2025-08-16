@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 
 import { LangChainStream } from "ai";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server"; // Use the 'auth' helper
 import { NextResponse } from "next/server";
 import { MemoryManager } from "@/lib/memory";
 import { rateLimit } from "@/lib/rate-limit";
@@ -33,12 +33,13 @@ export async function POST(
     const prompt = body.prompt.trim();
     const selectedLanguageCode = (body.lang as string) || "en";
 
-    const user = await currentUser().catch(() => null);
-    if (!user?.id || !user?.firstName) {
+    // Use Clerk's 'auth' helper for authentication
+    const { userId } = auth();
+    if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const identifier = `${request.url.split("?")[0]}-${user.id}`;
+    const identifier = `${request.url.split("?")[0]}-${userId}`;
     const { success } = await rateLimit(identifier);
     if (!success) {
       return new NextResponse("Rate limit exceeded", { status: 429 });
@@ -72,7 +73,7 @@ export async function POST(
 
     const companionKey = {
       companionName: aiEntity.id,
-      userId: user.id,
+      userId: userId,
       modelName: "gemini-1.5-flash",
     };
 
@@ -89,7 +90,7 @@ export async function POST(
       userMessageData = {
         content: prompt,
         role: "user",
-        userId: user.id,
+        userId: userId,
         companionId: aiEntity.id,
         interviewMateId: null,
       };
@@ -97,7 +98,7 @@ export async function POST(
       userMessageData = {
         content: prompt,
         role: "user",
-        userId: user.id,
+        userId: userId,
         interviewMateId: aiEntity.id,
         companionId: null,
       };
@@ -166,7 +167,6 @@ export async function POST(
         handleLLMNewToken: (token) => writer.write(token),
         handleLLMEnd: () => writer.close(),
         handleLLMError: (e: Error) => {
-          // Explicitly type 'e' as Error
           console.error("LLM Error:", e);
           writer.close();
         },
@@ -210,7 +210,7 @@ Remember to keep responses natural, engaging, and aligned with your persona.
       aiMessageData = {
         content: finalAIResponseContent,
         role: "system",
-        userId: user.id,
+        userId: userId,
         companionId: aiEntity.id,
         interviewMateId: null,
       };
@@ -218,7 +218,7 @@ Remember to keep responses natural, engaging, and aligned with your persona.
       aiMessageData = {
         content: finalAIResponseContent,
         role: "system",
-        userId: user.id,
+        userId: userId,
         interviewMateId: aiEntity.id,
         companionId: null,
       };
@@ -235,16 +235,13 @@ Remember to keep responses natural, engaging, and aligned with your persona.
       },
     });
   } catch (error: unknown) {
-    // Change error type to unknown
     console.error("[CHAT_POST ERROR]", error);
 
     let errorMessage = "An unexpected error occurred. Please try again later.";
     let statusCode = 500;
 
     if (error instanceof Error) {
-      // Use instanceof to narrow type
       if ("status" in error && typeof error.status === "number") {
-        // Check for status property
         statusCode = error.status;
         if (error.status === 503) {
           errorMessage =
