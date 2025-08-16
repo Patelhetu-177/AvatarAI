@@ -13,9 +13,9 @@ export async function POST(request: Request) {
 - Tech stack: ${techstack}
 - Focus: ${type}
 
-Return only a JSON array of strings like:
+Return ONLY a JSON array of strings like:
 ["Question 1", "Question 2", ...]
-Do not add any other commentary. Use plain text JSON.`;
+Do not add any other commentary or markdown formatting. The output should be a plain JSON array.`;
 
     const { text: questionsText } = await generateText({
       model: google("gemini-2.0-flash-001"),
@@ -23,21 +23,43 @@ Do not add any other commentary. Use plain text JSON.`;
     });
 
     let questions: string[] = [];
+    let cleanedText = questionsText.trim();
+
+    cleanedText = cleanedText
+      .replace(/^```json/, "")
+      .replace(/```$/, "")
+      .replace(/^\[/, "")
+      .replace(/\]$/, "")
+      .trim();
+
     try {
-      questions = JSON.parse(questionsText);
-      if (!Array.isArray(questions)) throw new Error("Not an array");
-    } catch {
-      questions = questionsText
-        .split("\n")
-        .map((s: string) => s.replace(/^\d+\.?\s*/, "").trim())
-        .filter((s: string) => s.length > 0);
+      questions = JSON.parse(`[${cleanedText}]`);
+      if (!Array.isArray(questions)) throw new Error("Not a valid array");
+    } catch (parseError) {
+      console.error("JSON parsing failed, falling back to regex parsing:", parseError);
+
+      const questionMatches = cleanedText.match(/"([^"]*)"/g);
+      
+      if (questionMatches) {
+        questions = questionMatches.map((s: string) => s.replace(/"/g, ""));
+      } else {
+        questions = cleanedText
+          .split(/\n|,/g)
+          .map((s: string) => s.replace(/^\d+\.?\s*[\-"']*/, "").trim())
+          .filter((s: string) => s.length > 0);
+      }
     }
+
+    const cleanedTechstack = (techstack || "")
+      .split(",")
+      .map((s: string) => s.trim())
+      .filter((s: string) => s.length > 0);
 
     const interview = {
       role,
       type,
       level,
-      techstack: (techstack || "").split(",").map((s: string) => s.trim()),
+      techstack: cleanedTechstack,
       questions,
       userId,
       finalized: true,
@@ -48,7 +70,7 @@ Do not add any other commentary. Use plain text JSON.`;
     const ref = await db.collection("interviews").add(interview);
 
     return new Response(JSON.stringify({ success: true, id: ref.id }), { status: 200 });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("generate interview error:", error);
     let errorMessage = "An unknown error occurred.";
     if (error instanceof Error) {
