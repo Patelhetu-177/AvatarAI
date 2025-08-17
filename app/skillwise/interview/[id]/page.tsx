@@ -29,9 +29,9 @@ const InterviewDetails = async ({ params }: { params: { id: string } }) => {
 
   return (
     <>
-      <div className="flex flex-row gap-4 justify-between">
+      <div className="flex flex-row gap-4 justify-between m-5">
         <div className="flex flex-row gap-4 items-center max-sm:flex-col">
-          <div className="flex flex-row gap-4 items-center">
+          <div className="flex flex-row gap-4 items-center ">
             <Image
               src={getRandomInterviewCover()}
               alt="cover-image"
@@ -39,7 +39,7 @@ const InterviewDetails = async ({ params }: { params: { id: string } }) => {
               height={40}
               className="rounded-full object-cover size-[40px]"
             />
-            <h3 className="capitalize text-black dark:text-white">
+            <h3 className="capitalize text-black dark:text-white ">
               {interview.role} Interview
             </h3>
           </div>
