@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis";
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai"; // Changed import
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { PineconeStore } from "@langchain/pinecone";
 
@@ -12,64 +12,20 @@ export type CompanionKey = {
 export class MemoryManager {
   private static instance: MemoryManager;
   private history: Redis;
-  private vectorDBClient: Pinecone;
+  private vectorDBClient?: Pinecone;
 
-  public constructor() {
+  private constructor() {
     this.history = Redis.fromEnv();
-    this.vectorDBClient = new Pinecone();
   }
 
-  public async init() {
-    if (!process.env.PINECONE_API_KEY) {
-      throw new Error("PINECONE_API_KEY is not set");
-    }
-    // if (!process.env.PINECONE_ENVIRONMENT) { // Pinecone often needs an environment variable
-    //   throw new Error("PINECONE_ENVIRONMENT is not set");
-    // }
-    if (!process.env.PINECONE_INDEX) {
-        throw new Error("PINECONE_INDEX is not set");
-    }
+  private async init() {
+    if (this.vectorDBClient) return;
+    if (!process.env.PINECONE_API_KEY) throw new Error("PINECONE_API_KEY is not set");
+    if (!process.env.PINECONE_INDEX) throw new Error("PINECONE_INDEX is not set");
 
     this.vectorDBClient = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY,
-      // environment: process.env.PINECONE_ENVIRONMENT, // Add environment if needed by your Pinecone setup
     });
-  }
-
-  public async vectorSearch(
-    recentChatHistory: string,
-    companionFileName: string
-  ) {
-    const pineconeClient = this.vectorDBClient; // Type assertion not strictly necessary if `this.vectorDBClient` is already `Pinecone`
-
-    const pineconeIndex = pineconeClient.Index(
-      process.env.PINECONE_INDEX!
-    );
-
-    // IMPORTANT: Use GoogleGenerativeAIEmbeddings here
-    const embeddings = new GoogleGenerativeAIEmbeddings({
-        apiKey: process.env.GEMINI_API_KEY, // Ensure GEMINI_API_KEY is set in your .env
-        modelName: "embedding-001", // This is the recommended Gemini embedding model
-    });
-
-    const vectorStore = await PineconeStore.fromExistingIndex(
-      embeddings, // Pass the Gemini embeddings
-      { pineconeIndex }
-    );
-
-    const similarDocs = await vectorStore
-      .similaritySearch(recentChatHistory, 3, { fileName: companionFileName })
-      .catch((err: Error) => {
-        if (err.message.includes("429")) {
-          console.log(
-            "WARNING: API quota exceeded. Please check your Gemini/Google AI plan and usage limits."
-          );
-        } else {
-          console.log("WARNING: failed to get vector search results.", err);
-        }
-        return null; // Ensure the error doesn't propagate further
-      });
-    return similarDocs;
   }
 
   public static async getInstance(): Promise<MemoryManager> {
@@ -84,35 +40,58 @@ export class MemoryManager {
     return `${companionKey.companionName}-${companionKey.modelName}-${companionKey.userId}`;
   }
 
-  public async writeToHistory(text: string, companionKey: CompanionKey) {
-    if (!companionKey || typeof companionKey.userId == "undefined") {
-      console.log("Companion key set incorrectly");
-      return "";
-    }
+  public async vectorSearch(recentChatHistory: string, companionFileName: string) {
+    if (!this.vectorDBClient) await this.init();
+    const pineconeIndex = this.vectorDBClient!.Index(process.env.PINECONE_INDEX!);
 
-    const key = this.generateRedisCompanionKey(companionKey);
-    const result = await this.history.zadd(key, {
-      score: Date.now(),
-      member: text,
+    const embeddings = new GoogleGenerativeAIEmbeddings({
+      apiKey: process.env.GEMINI_API_KEY!,
+      modelName: "gemini-embedding-001",
     });
 
-    return result;
+    const embeddingKey = `embedding:${companionFileName}:${recentChatHistory}`;
+    let embedding: number[];
+
+    const cached = await this.history.get<string>(embeddingKey);
+    if (cached) {
+      embedding = JSON.parse(cached) as number[];
+    } else {
+      const vector = await embeddings.embedQuery(recentChatHistory);
+      embedding = vector;
+      await this.history.set(embeddingKey, JSON.stringify(vector), { ex: 3600 });
+    }
+
+    const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
+      pineconeIndex,
+    });
+
+    try {
+      const similarDocs = await vectorStore.similaritySearchVectorWithScore(
+        embedding,
+        3,
+        { filter: { fileName: companionFileName } }
+      );
+      return similarDocs;
+    } catch (err: unknown) {
+      console.error("Vector search failed:", err instanceof Error ? err.message : 'Unknown error');
+      return null;
+    }
+  }
+
+  public async writeToHistory(text: string, companionKey: CompanionKey) {
+    if (!companionKey?.userId) return "";
+    const key = this.generateRedisCompanionKey(companionKey);
+    await this.history.zadd(key, { score: Date.now(), member: text });
+    return true;
   }
 
   public async readLatestHistory(companionKey: CompanionKey): Promise<string> {
-    if (!companionKey || typeof companionKey.userId == "undefined") {
-      console.log("Companion key set incorrectly");
-      return "";
-    }
-
+    if (!companionKey?.userId) return "";
     const key = this.generateRedisCompanionKey(companionKey);
-    let result = await this.history.zrange(key, 0, Date.now(), {
-      byScore: true,
-    });
-
-    result = result.slice(-30).reverse(); // Keep only the last 30 messages
-    const recentChats = result.reverse().join("\n");
-    return recentChats;
+    const total = await this.history.zcard(key);
+    const start = total > 30 ? total - 30 : 0;
+    const result = await this.history.zrange(key, start, -1);
+    return result.join("\n");
   }
 
   public async seedChatHistory(
@@ -121,16 +100,11 @@ export class MemoryManager {
     companionKey: CompanionKey
   ) {
     const key = this.generateRedisCompanionKey(companionKey);
-    if (await this.history.exists(key)) {
-      console.log("User already has chat history");
-      return;
-    }
-
+    if (await this.history.exists(key)) return;
     const content = seedContent.split(delimiter);
     let counter = 0;
     for (const line of content) {
-      await this.history.zadd(key, { score: counter, member: line });
-      counter += 1;
+      await this.history.zadd(key, { score: counter++, member: line });
     }
   }
 }
