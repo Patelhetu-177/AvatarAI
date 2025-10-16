@@ -18,7 +18,7 @@ Return ONLY a JSON array of strings like:
 Do not add any other commentary or markdown formatting. The output should be a plain JSON array.`;
 
     const { text: questionsText } = await generateText({
-      model: google("gemini-2.0-flash-001"),
+      model: google("gemini-2.5-flash-native-audio-preview-09-2025"),
       prompt,
     });
 

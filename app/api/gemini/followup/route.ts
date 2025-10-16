@@ -18,7 +18,7 @@ Based on this answer, provide either:
 Keep the reply <= 30 words. Output only the reply text, no extra commentary.`;
 
     const { text } = await generateText({
-      model: google("gemini-2.0-flash-001"),
+      model: google("gemini-2.5-flash-native-audio-preview-09-2025"),
       prompt,
     });
 
