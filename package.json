@@ -85,6 +85,6 @@
     "typescript": "^5"
   },
   "overrides": {
-    "@ai-sdk/provider": "1.0.0"
+    "@ai-sdk/provider": "1.1.3"
   }
 }

@@ -1,5 +1,9 @@
 import { generateText } from "ai";
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
 
 export async function POST(request: Request) {
   try {
@@ -18,7 +22,7 @@ Based on this answer, provide either:
 Keep the reply <= 30 words. Output only the reply text, no extra commentary.`;
 
     const { text } = await generateText({
-      model: google("gemini-2.5-flash-native-audio-preview-09-2025"),
+      model: google("gemini-2.5-flash-preview-09-2025"),
       prompt,
     });
 

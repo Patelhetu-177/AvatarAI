@@ -18,7 +18,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
       .join("");
 
     const { object } = await generateObject({
-      model: google("gemini-2.5-flash-native-audio-preview-09-2025", {
+      model: google("gemini-2.5-flash-preview-09-2025", {
         structuredOutputs: false,
       }),
       schema: feedbackSchema,
@@ -60,9 +60,27 @@ export async function createFeedback(params: CreateFeedbackParams) {
     await feedbackRef.set(feedback);
 
     return { success: true, feedbackId: feedbackRef.id };
-  } catch (error) {
+  } catch (error: any) {
+    // Use 'any' to handle unknown error types initially
     console.error("Error saving feedback:", error);
-    return { success: false };
+
+    let errorMessage = "An unknown error occurred.";
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (
+      typeof error === "object" &&
+      error !== null &&
+      "message" in error
+    ) {
+      errorMessage = String((error as { message: any }).message);
+    } else {
+      errorMessage = String(error);
+    }
+
+    console.error("Error details:", error);
+
+    return { success: false, error: errorMessage };
   }
 }
 
