@@ -60,25 +60,31 @@ export async function createFeedback(params: CreateFeedbackParams) {
     await feedbackRef.set(feedback);
 
     return { success: true, feedbackId: feedbackRef.id };
-  } catch (error: any) {
-    // Use 'any' to handle unknown error types initially
-    console.error("Error saving feedback:", error);
+  } catch (errorUnknown: unknown) {
+    // Narrow unknown error to a string safely for logging/return
+    console.error("Error saving feedback:", errorUnknown);
 
-    let errorMessage = "An unknown error occurred.";
+    const getErrorMessage = (err: unknown): string => {
+      if (err instanceof Error) return err.message;
+      if (typeof err === "object" && err !== null && "message" in err) {
+          try {
+            const maybe = (err as Record<string, unknown>)?.message;
+            if (typeof maybe === "string") return maybe;
+            return String(maybe);
+          } catch {
+            return "An unknown error occurred.";
+          }
+      }
+      try {
+        return String(err);
+      } catch {
+        return "An unknown error occurred.";
+      }
+    };
 
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else if (
-      typeof error === "object" &&
-      error !== null &&
-      "message" in error
-    ) {
-      errorMessage = String((error as { message: any }).message);
-    } else {
-      errorMessage = String(error);
-    }
+    const errorMessage = getErrorMessage(errorUnknown);
 
-    console.error("Error details:", error);
+    console.error("Error details:", errorUnknown);
 
     return { success: false, error: errorMessage };
   }

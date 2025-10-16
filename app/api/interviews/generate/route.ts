@@ -26,8 +26,22 @@ Do not add any other commentary or markdown formatting. The output should be a p
         prompt,
       });
 
-      questionsText = (result && (result as any).text) || (result as any).output || String(result || "");
-    } catch (sdkError: any) {
+      // result may be a string or an object containing text/output
+      if (typeof result === "string") {
+        questionsText = result;
+      } else if (result && typeof result === "object") {
+        const asRecord = result as unknown as Record<string, unknown>;
+        if (typeof asRecord.text === "string") {
+          questionsText = asRecord.text;
+        } else if (typeof asRecord.output === "string") {
+          questionsText = asRecord.output;
+        } else {
+          questionsText = String(result);
+        }
+      } else {
+        questionsText = String(result || "");
+      }
+    } catch (sdkError: unknown) {
       const serializeError = (err: unknown) => {
         if (err instanceof Error) return { message: err.message, stack: err.stack };
         try {
@@ -40,10 +54,21 @@ Do not add any other commentary or markdown formatting. The output should be a p
       const serialized = serializeError(sdkError);
       console.error("generateText SDK error (serialized):", serialized);
 
-      const message =
-        (serialized && typeof serialized === "object" && "message" in serialized && (serialized as any).message) ||
-        JSON.stringify(serialized) ||
-        "An unknown SDK error occurred.";
+      const message = ((): string => {
+        if (typeof serialized === "string") return serialized;
+        if (typeof serialized === "object" && serialized !== null && "message" in serialized) {
+          try {
+            return String((serialized as Record<string, unknown>).message);
+          } catch {
+            return JSON.stringify(serialized);
+          }
+        }
+        try {
+          return JSON.stringify(serialized);
+        } catch {
+          return "An unknown SDK error occurred.";
+        }
+      })();
 
       return new Response(JSON.stringify({ success: false, error: message }), { status: 500 });
     }
@@ -101,24 +126,30 @@ Do not add any other commentary or markdown formatting. The output should be a p
     return new Response(JSON.stringify({ success: true, id: ref.id }), {
       status: 200,
     });
-  } catch (error: any) {
-    console.error("generate interview error:", error);
+  } catch (errorUnknown: unknown) {
+    console.error("generate interview error:", errorUnknown);
 
-    let errorMessage = "An unknown error occurred.";
+    const getErrorMessage = (err: unknown): string => {
+      if (err instanceof Error) return err.message;
+      if (typeof err === "object" && err !== null && "message" in err) {
+        try {
+          const maybe = (err as Record<string, unknown>).message;
+          if (typeof maybe === "string") return maybe;
+          return String(maybe);
+        } catch {
+          return "An unknown error occurred.";
+        }
+      }
+      try {
+        return String(err);
+      } catch {
+        return "An unknown error occurred.";
+      }
+    };
 
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else if (
-      typeof error === "object" &&
-      error !== null &&
-      "message" in error
-    ) {
-      errorMessage = String((error as { message: any }).message);
-    } else {
-      errorMessage = String(error);
-    }
+    const errorMessage = getErrorMessage(errorUnknown);
 
-    console.error("Error details:", error);
+    console.error("Error details:", errorUnknown);
 
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),

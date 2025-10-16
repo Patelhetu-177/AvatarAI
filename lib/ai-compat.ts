@@ -1,14 +1,23 @@
 import { APICallError } from "@ai-sdk/provider";
 
-if (!(APICallError as any).isAPICallError) {
+// Provide a narrow compatibility shim without using `any`.
+// Some SDK versions expose `isInstance` while others expose `isAPICallError`.
+type APICallErrorLike = {
+  isAPICallError?: (v: unknown) => boolean;
+  isInstance?: (v: unknown) => boolean;
+};
+
+const maybeAPICallError = APICallError as unknown as APICallErrorLike;
+
+if (typeof maybeAPICallError.isAPICallError !== "function") {
   try {
-    if ((APICallError as any).isInstance) {
-      (APICallError as any).isAPICallError = (APICallError as any).isInstance.bind(APICallError);
+    if (typeof maybeAPICallError.isInstance === "function") {
+      maybeAPICallError.isAPICallError = maybeAPICallError.isInstance.bind(APICallError);
     } else {
-      (APICallError as any).isAPICallError = (err: unknown) => false;
+      maybeAPICallError.isAPICallError = () => false;
     }
   } catch {
-    (APICallError as any).isAPICallError = (err: unknown) => false;
+    maybeAPICallError.isAPICallError = () => false;
   }
 }
 
