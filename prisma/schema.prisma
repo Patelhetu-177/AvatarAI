@@ -63,9 +63,63 @@ model Message {
 
   @@index([companionId])
   @@index([interviewMateId])
+  Quiz Quiz[]
 }
 
 enum Role {
   user
   system
+}
+
+
+model Quiz {
+  id          String       @id @default(uuid())
+  userId      String
+  userName    String?
+  subject     String
+  grade       Int
+  questions   Question[]
+  submissions Submission[]
+  messages    Message[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([userId])
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Question {
+  id             String      @id @default(uuid())
+  quizId         String
+  quiz           Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  text           String      @db.Text
+  options        Json
+  correctAnswer  String
+  difficulty     Difficulty  @default(MEDIUM)
+  embedding      String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([quizId])
+}
+
+model Submission {
+  id          String   @id @default(uuid())
+  userId      String
+  quizId      String
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers     Json
+  results     Json?    @db.JsonB
+  score       Int
+  suggestions Json?    @db.JsonB
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([quizId])
 }
