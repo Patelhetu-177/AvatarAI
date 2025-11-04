@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { generateQuiz } from '@/lib/services/quiz.service';
 import prisma from '@/lib/prismadb';
 import { initPinecone, storeQuestionEmbedding } from '@/lib/services/pinecone.service';
+import { auth, currentUser } from '@clerk/nextjs/server';
 
 interface Question {
   id: string;
@@ -65,10 +66,14 @@ export async function POST(req: Request) {
     const quizData = await generateQuiz(gradeNum, subject, numQuestionsNum, topicList);
 
     const pineconeInitialized = await initPinecone();
+    
+    const { userId } = auth();
+    const user = await currentUser();
+    
     const quiz = await prisma.quiz.create({
       data: {
-        userId: 'guest-user',
-        userName: 'Guest',
+        userId: userId || 'guest-user',
+        userName: user?.firstName || 'Guest',
         subject,
         grade: gradeNum,
         questions: {

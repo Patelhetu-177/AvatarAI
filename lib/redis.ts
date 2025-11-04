@@ -1,7 +1,6 @@
-// lib/redis.ts
 import { Redis } from '@upstash/redis';
 
-const CACHE_TTL = 60 * 60; // 1 hour in seconds
+const CACHE_TTL = 60 * 60; 
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL || '',
@@ -11,12 +10,28 @@ const redis = new Redis({
 export async function getCachedQuiz(cacheKey: string) {
   try {
     const cached = await redis.get(cacheKey);
-    if (cached) {
-      console.log(`[Redis] Cache hit for key: ${cacheKey}`);
-      return JSON.parse(cached as string);
+    if (!cached) {
+      console.log(`[Redis] Cache miss for key: ${cacheKey}`);
+      return null;
     }
-    console.log(`[Redis] Cache miss for key: ${cacheKey}`);
-    return null;
+
+    console.log(`[Redis] Cache hit for key: ${cacheKey}`);
+    
+    if (typeof cached === 'object' && cached !== null) {
+      return cached;
+    }
+    
+    if (typeof cached === 'string' && cached === '[object Object]') {
+      console.warn(`[Redis] Found string '[object Object]' in cache for key: ${cacheKey}, returning null`);
+      return null;
+    }
+    
+    try {
+      return typeof cached === 'string' ? JSON.parse(cached) : cached;
+    } catch (parseError) {
+      console.error(`[Redis] Error parsing cached data for key ${cacheKey}:`, parseError);
+      return null;
+    }
   } catch (error) {
     console.error(`[Redis] Error getting cached data for key ${cacheKey}:`, error);
     return null;

@@ -84,46 +84,55 @@ export default function QuizHome() {
     const buttonText = isPopular ? 'Start Quiz' : (hasSubmissions ? 'View Results' : 'Start Quiz');
     const buttonVariant = isPopular ? 'default' : (hasSubmissions ? 'outline' : 'default');
     const actionType = isPopular || !hasSubmissions ? 'start' : 'view';
+    
+    const questionCount = Array.isArray(quiz.questions) ? quiz.questions.length : 0;
 
     return (
       <Card 
         className={`w-full hover:shadow-md transition-shadow ${isActive ? 'ring-2 ring-primary' : ''}`}
         onClick={(e) => {
-          // Only handle card click if the click wasn't on a button
           if (!(e.target instanceof HTMLButtonElement)) {
             handleQuizAction(quiz.id, actionType);
           }
         }}
       >
         <CardHeader>
-          <CardTitle className="text-lg">{quiz.subject}</CardTitle>
+          <CardTitle className="text-lg">{quiz.subject || 'Untitled Quiz'}</CardTitle>
           <CardDescription>
-            Grade {quiz.grade} • {quiz.questions.length} Questions
+            {quiz.grade ? `Grade ${quiz.grade} • ` : ''}
+            {questionCount} Question{questionCount !== 1 ? 's' : ''}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isPopular ? (
             <p className="text-sm text-muted-foreground">
-              {quiz.submissions?.length || 0} attempts
+              {quiz.submissions?.length || 0} attempt{quiz.submissions?.length !== 1 ? 's' : ''}
             </p>
-          ) : (
-            quiz.submissions?.[0] && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Score:</span>
-                  <span className="font-medium">{quiz.submissions[0].score}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-green-600 h-2 rounded-full transition-all duration-500" 
-                    style={{ width: `${quiz.submissions[0].score}%` }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Taken on {new Date(quiz.submissions[0].createdAt).toLocaleDateString()}
-                </p>
+          ) : hasSubmissions && quiz.submissions?.[0] ? (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Score:</span>
+                <span className="font-medium">{quiz.submissions[0].score}%</span>
               </div>
-            )
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-green-600 h-2 rounded-full transition-all duration-500" 
+                  style={{ width: `${quiz.submissions[0].score}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Taken on {new Date(quiz.submissions[0].createdAt).toLocaleDateString()}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Not yet attempted
+              </p>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-gray-300 h-2 rounded-full w-full" />
+              </div>
+            </div>
           )}
         </CardContent>
         <CardFooter>

@@ -3,28 +3,16 @@ import prisma from '@/lib/prismadb';
 
 export async function GET() {
   try {
-    const submissions = await prisma.submission.findMany({
-      take: 10, 
-      orderBy: {
-        createdAt: 'desc',
-      },
+    const recentSubmissions = await prisma.submission.findMany({
+      take: 5, 
+      orderBy: { createdAt: 'desc' },
       include: {
         quiz: {
-          select: {
-            id: true,
-            subject: true,
-            grade: true,
-            questions: {
-              select: { id: true }
-            },
+          include: {
+            questions: { select: { id: true } },
             submissions: {
-              select: {
-                score: true,
-                createdAt: true
-              },
-              orderBy: {
-                createdAt: 'desc'
-              },
+              select: { score: true, createdAt: true },
+              orderBy: { createdAt: 'desc' },
               take: 1
             }
           }
@@ -32,16 +20,39 @@ export async function GET() {
       }
     });
 
-    const quizzes = submissions.map(sub => ({
-      id: sub.quiz.id,
-      subject: sub.quiz.subject,
-      grade: sub.quiz.grade,
-      questions: sub.quiz.questions,
-      submissions: sub.quiz.submissions,
-      createdAt: sub.createdAt
-    }));
+    const recentQuizzes = await prisma.quiz.findMany({
+      take: 10, 
+      orderBy: { createdAt: 'desc' },
+      include: {
+        questions: { select: { id: true } },
+        submissions: {
+          select: { score: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+          take: 1
+        }
+      }
+    });
 
-    return NextResponse.json(quizzes);
+    const allQuizzes = [
+      ...recentSubmissions.map(sub => ({
+        ...sub.quiz,
+        createdAt: sub.createdAt
+      })),
+      ...recentQuizzes
+    ];
+    
+    const uniqueQuizzesMap = new Map();
+    allQuizzes.forEach(quiz => {
+      if (!uniqueQuizzesMap.has(quiz.id)) {
+        uniqueQuizzesMap.set(quiz.id, quiz);
+      }
+    });
+
+    const uniqueQuizzes = Array.from(uniqueQuizzesMap.values())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10); 
+
+    return NextResponse.json(uniqueQuizzes);
   } catch (error) {
     console.error('Error fetching quiz history:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
