@@ -12,15 +12,23 @@ const slides = [
     src: "/celebrity.png",
     route: "/companion",
     content:
-      "Engage in dynamic, personalized conversations with your favorite celebrities, historical figures, or fictional characters.",
+      "Engage in personalized conversations with your favorite celebrities, historical figures, or fictional characters.",
   },
+  {
+  title: "AI Quiz Challenge",
+  button: "Begin Quiz",
+  src: "/quiz-image.png",
+  route: "/quiz",
+  content:
+    "Test your knowledge against our AI-powered quiz system. Get instant feedback and learn as you go!",
+},
   {
     title: "Learn a New Skill",
     button: "Start Learning",
     src: "/interview.png",
     route: "/interviewz",
     content:
-      "Access interactive tutorials and expert guidance to master new skills at your own pace, from coding to creative writing",
+      "Access tutorials and expert guidance to master new skills at your own pace, from coding to creative writing",
   },
   {
     title: "Ace Your Interview",
@@ -28,7 +36,7 @@ const slides = [
     src: "/learning.png",
     route: "/skillwise",
     content:
-      "Practice with an AI that provides real-time feedback on your answers and helps you prepare for any interview scenario.",
+      "Practice with an AI that provides real-time feedback on your answers and helps you prepare for any interview.",
   },
 ];
 
