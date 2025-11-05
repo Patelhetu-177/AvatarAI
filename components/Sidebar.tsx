@@ -1,7 +1,16 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Contact2, Home, Settings, Brain , BotIcon, AudioLines, ShieldQuestionIcon} from "lucide-react";
+import {
+  Contact2,
+  Home,
+  Settings,
+  Brain,
+  BotIcon,
+  AudioLines,
+  Bot,
+  ShieldQuestionIcon,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 
@@ -23,6 +32,18 @@ export const Sidebar = () => {
       pro: false,
     },
     {
+      icon: ShieldQuestionIcon,
+      href: "/quiz",
+      lable: "Quiz",
+      pro: false,
+    },
+    {
+      icon: Bot,
+      href: "/documents",
+      lable: "DocHub",
+      pro: false,
+    },
+    {
       icon: BotIcon,
       href: "/companion",
       lable: "Companion",
@@ -33,12 +54,6 @@ export const Sidebar = () => {
       href: "/interviewz",
       lable: "InterviewMate",
       pro: true,
-    },
-    {
-      icon: ShieldQuestionIcon,
-      href: "/quiz",
-      lable: "Quiz",
-      pro: false,
     },
     {
       icon: Settings,

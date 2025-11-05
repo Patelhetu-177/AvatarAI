@@ -8,6 +8,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Document {
+  id          String         @id @default(uuid())
+  userId      String
+  title       String
+  description String?
+  fileName    String
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  chunks      DocumentChunk[]
+
+  @@index([userId])
+}
+
+model DocumentChunk {
+  id         String   @id @default(uuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content    String
+  embedding  Json   
+  metadata   Json?   
+  pageNumber Int?
+  createdAt  DateTime @default(now())
+
+  @@index([documentId])
+}
+
 model Category {
   id              String          @id @default(uuid())
   name            String
