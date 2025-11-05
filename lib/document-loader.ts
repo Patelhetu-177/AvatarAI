@@ -1,4 +1,3 @@
-import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import * as mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 import * as JSZip from 'jszip';
@@ -43,18 +42,40 @@ export async function loadDocument(file: File): Promise<{ pageContent: string; m
     const startTime = Date.now();
     
     if (fileType === 'pdf') {
-      console.log('Loading PDF document...');
-      const loader = new PDFLoader(file);
-      const docs = await loader.load();
-      console.log(`Loaded ${docs.length} pages from PDF in ${Date.now() - startTime}ms`);
-      return docs.map(doc => ({
-        pageContent: doc.pageContent,
-        metadata: { 
-          ...doc.metadata, 
-          ...metadata,
-          pageNumber: doc.metadata.loc?.pageNumber || 1
+      console.log('Loading PDF document (using pdf-parse)...');
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      try {
+        type PDFParseFunction = (data: Buffer) => Promise<{ text?: string }>;
+
+        const pdfParseModule = await import('pdf-parse');
+
+        const pdfParseFn: PDFParseFunction =
+          ((pdfParseModule as unknown) as { default?: PDFParseFunction }).default ??
+          (pdfParseModule as unknown as PDFParseFunction);
+
+        const data = await pdfParseFn(buffer);
+        const text = String(data?.text || '').trim();
+
+        if (!text) {
+          throw new Error('No text extracted from PDF');
         }
-      }));
+
+        console.log(`Extracted ${text.length} characters from PDF in ${Date.now() - startTime}ms`);
+
+        return [{
+          pageContent: text,
+          metadata: {
+            ...metadata,
+            contentLength: text.length,
+            processingTime: `${Date.now() - startTime}ms`
+          }
+        }];
+      } catch (err) {
+        console.error('Error parsing PDF with pdf-parse:', err);
+        throw new Error('Failed to parse PDF. Consider converting to a supported format if the file is malformed.');
+      }
     } 
     else if (['doc', 'docx'].includes(fileType || '')) {
       console.log('Processing Word document...');
