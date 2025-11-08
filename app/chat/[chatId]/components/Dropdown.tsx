@@ -1,4 +1,4 @@
-// Common/Components/Dropdown.tsx
+
 
 import React, {
   useState,
@@ -173,9 +173,11 @@ const Content: React.FC<ContentProps> = ({
 
     switch (placementState) {
       case "right-end":
-        isRtl === "rtl"
-          ? (dropdownElement.style.inset = "0px auto auto 0px")
-          : (dropdownElement.style.inset = "0px 0px auto auto");
+        if (isRtl === "rtl") {
+          dropdownElement.style.inset = "0px auto auto 0px";
+        } else {
+          dropdownElement.style.inset = "0px 0px auto auto";
+        }
         dropdownElement.style.transform = "translate(0px, 54px)";
         break;
       case "start-end":

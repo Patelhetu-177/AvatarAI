@@ -114,7 +114,7 @@ export const DocumentChatMessage = ({
           {role === 'assistant' ? (
             <div className="space-y-2">
               <div className="font-medium text-sm text-muted-foreground mb-1">
-                InterviewMate Assistant
+                Assistant
               </div>
               <div className="whitespace-pre-wrap break-words text-foreground">
                 {content}

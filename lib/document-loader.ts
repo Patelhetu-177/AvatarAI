@@ -1,17 +1,7 @@
-import * as mammoth from 'mammoth';
-import * as XLSX from 'xlsx';
-import * as JSZip from 'jszip';
+import { Document } from '@langchain/core/documents';
+import { documentService } from './services/document.service';
 
-function extractTextFromSlide(xmlContent: string): string {
-  const textMatches = xmlContent.match(/<a:t(?:\s+[^>]*)?>([^<]*)<\/a:t>/g) || [];
-  const texts = textMatches.map(match => {
-    const textMatch = match.match(/<a:t(?:\s+[^>]*)?>([^<]*)<\/a:t>/);
-    return textMatch ? textMatch[1] : '';
-  }).filter(Boolean);
-  return texts.join(' ').replace(/\s+/g, ' ').trim();
-}
-
-interface DocumentMetadata {
+export interface DocumentMetadata {
   source: string;
   type?: string;
   size: number;
@@ -20,164 +10,43 @@ interface DocumentMetadata {
   processingTime?: string;
   pageNumber?: number;
   processedAt?: string;
-  [key: string]: string | number | boolean | { pageNumber: number } | undefined;
+  [key: string]: unknown;
 }
 
 export async function loadDocument(file: File): Promise<{ pageContent: string; metadata: DocumentMetadata }[]> {
-  const fileType = file.name.split('.').pop()?.toLowerCase();
-  const fileName = file.name;
-  const fileSize = file.size;
-
-  console.log(`Processing file: ${fileName}, Type: ${fileType}, Size: ${(fileSize / 1024 / 1024).toFixed(2)}MB`);
-
   try {
-    let content = '';
-    const metadata = {
-      source: fileName,
-      type: fileType,
-      size: fileSize,
-      processedAt: new Date().toISOString()
-    };
-
-    const startTime = Date.now();
+    console.log(`Processing file: ${file.name}, Size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
     
-    if (fileType === 'pdf') {
-      console.log('Loading PDF document (using pdf-parse)...');
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      try {
-        type PDFParseFunction = (data: Buffer) => Promise<{ text?: string }>;
-
-        const pdfParseModule = await import('pdf-parse');
-
-        const pdfParseFn: PDFParseFunction =
-          ((pdfParseModule as unknown) as { default?: PDFParseFunction }).default ??
-          (pdfParseModule as unknown as PDFParseFunction);
-
-        const data = await pdfParseFn(buffer);
-        const text = String(data?.text || '').trim();
-
-        if (!text) {
-          throw new Error('No text extracted from PDF');
-        }
-
-        console.log(`Extracted ${text.length} characters from PDF in ${Date.now() - startTime}ms`);
-
-        return [{
-          pageContent: text,
-          metadata: {
-            ...metadata,
-            contentLength: text.length,
-            processingTime: `${Date.now() - startTime}ms`
-          }
-        }];
-      } catch (err) {
-        console.error('Error parsing PDF with pdf-parse:', err);
-        throw new Error('Failed to parse PDF. Consider converting to a supported format if the file is malformed.');
+    const documents = await documentService.processDocument(file);
+    
+    await documentService.storeDocumentVectors(documents);
+    
+    return documents.map(doc => ({
+      pageContent: doc.pageContent,
+      metadata: {
+        ...doc.metadata,
+        contentLength: doc.pageContent.length,
+        processingTime: doc.metadata.processingTime ? String(doc.metadata.processingTime) : '0ms'
       }
-    } 
-    else if (['doc', 'docx'].includes(fileType || '')) {
-      console.log('Processing Word document...');
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const result = await mammoth.extractRawText({ buffer });
-      content = result.value;
-      console.log(`Extracted ${content.length} characters from Word document in ${Date.now() - startTime}ms`);
-    } 
-    else if (['xls', 'xlsx'].includes(fileType || '')) {
-      console.log('Processing Excel document...');
-      const arrayBuffer = await file.arrayBuffer();
-      const data = new Uint8Array(arrayBuffer);
-      const workbook = XLSX.read(data, { type: 'array' });
-      
-      content = workbook.SheetNames.map(sheetName => {
-        const worksheet = workbook.Sheets[sheetName];
-        return `Sheet: ${sheetName}\n${XLSX.utils.sheet_to_csv(worksheet)}`;
-      }).join('\n\n');
-      
-      console.log(`Processed Excel workbook with ${workbook.SheetNames.length} sheets in ${Date.now() - startTime}ms`);
-    } 
-    else if (['ppt', 'pptx'].includes(fileType || '')) {
-      console.log('Processing PowerPoint document...');
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      
-      try {
-        const zip = await JSZip.loadAsync(buffer);
-        const slidePromises: Promise<string>[] = [];
-        let slideIndex = 1;
-        
-        while (zip.file(`ppt/slides/slide${slideIndex}.xml`)) {
-          const slidePath = `ppt/slides/slide${slideIndex}.xml`;
-          const slideContent = await zip.file(slidePath)?.async('text') || '';
-          const slideText = extractTextFromSlide(slideContent);
-          if (slideText) {
-            slidePromises.push(Promise.resolve(`Slide ${slideIndex}:\n${slideText}\n`));
-          }
-          slideIndex++;
-        }
-        
-        const notesPromises: Promise<string>[] = [];
-        let noteIndex = 1;
-        
-        while (zip.file(`ppt/notesSlides/notesSlide${noteIndex}.xml`)) {
-          const notePath = `ppt/notesSlides/notesSlide${noteIndex}.xml`;
-          const noteContent = await zip.file(notePath)?.async('text') || '';
-          const noteText = extractTextFromSlide(noteContent);
-          if (noteText) {
-            notesPromises.push(Promise.resolve(`Notes ${noteIndex}:\n${noteText}\n`));
-          }
-          noteIndex++;
-        }
-        
-        const [slideTexts, noteTexts] = await Promise.all([
-          Promise.all(slidePromises),
-          Promise.all(notesPromises)
-        ]);
-        
-        content = [
-          ...slideTexts,
-          ...noteTexts
-        ].join('\n\n').trim();
-        
-        if (!content) {
-          throw new Error('No extractable text found in PowerPoint file');
-        }
-        
-        console.log(`Extracted ${content.length} characters from PowerPoint in ${Date.now() - startTime}ms`);
-      } catch (error) {
-        console.error('Error processing PowerPoint file:', error);
-        throw new Error('Failed to process PowerPoint file. For best results, please convert to PDF before uploading.');
-      }
-    }
-    else if (fileType === 'txt') {
-      console.log('Loading text document...');
-      content = await file.text();
-      console.log(`Loaded ${content.length} characters from text file in ${Date.now() - startTime}ms`);
-    } 
-    else {
-      const errorMsg = `Unsupported file type: ${fileType}. Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT`;
-      console.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-
-    if (content) {
-      console.log(`Extracted content length: ${content.length} characters`);
-      return [{
-        pageContent: content,
-        metadata: {
-          ...metadata,
-          contentLength: content.length,
-          processingTime: `${Date.now() - startTime}ms`
-        }
-      }];
-    }
-
-    throw new Error('No content could be extracted from the document');
+    }));
   } catch (error) {
-    const errorMsg = `Error processing document ${fileName}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    const errorMsg = `Error processing document ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`;
     console.error(errorMsg, error);
     throw new Error(`Failed to process document: ${errorMsg}`);
   }
 }
+
+export async function searchSimilarDocuments(query: string, k: number = 5): Promise<{ pageContent: string; metadata: DocumentMetadata }[]> {
+  try {
+    const results = await documentService.searchSimilarDocuments(query, k);
+    return results.map(doc => ({
+      pageContent: doc.pageContent,
+      metadata: doc.metadata as DocumentMetadata
+    }));
+  } catch (error) {
+    console.error('Error searching similar documents:', error);
+    throw new Error('Failed to search similar documents');
+  }
+}
+
+export type { Document };

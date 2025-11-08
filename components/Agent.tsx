@@ -175,7 +175,8 @@ export default function Agent({
     let answer = "";
     try {
       answer = await startRecognition(20000);
-    } catch (err) {
+    } catch {
+      // If audio capture fails, fall back to text input
       answer =
         window.prompt("Couldn't capture audio. Please type your answer:") || "";
     }

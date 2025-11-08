@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-import { LangChainStream } from "ai";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { MemoryManager } from "@/lib/memory";
@@ -104,10 +103,13 @@ export async function POST(
       ?.map(([doc]) => (typeof doc.pageContent === "string" ? doc.pageContent : ""))
       .join("\n") || "";
 
-    const { stream, writer } = LangChainStream();
+    const encoder = new TextEncoder();
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
 
-    const model = new ChatGoogleGenerativeAI({
-      model: "gemini-2.5-flash-preview-09-2025",
+    // Define model configuration
+    const modelConfig = {
+      modelName: "gemini-2.5-flash-preview-09-2025" as const,
       apiKey: GEMINI_API_KEY,
       maxOutputTokens: 2048,
       temperature: 0.7,
@@ -119,11 +121,22 @@ export async function POST(
         { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
       ],
       callbacks: CallbackManager.fromHandlers({
-        handleLLMNewToken: (token) => writer.write(token),
-        handleLLMEnd: () => writer.close(),
-        handleLLMError: (e: Error) => { console.error("LLM Error:", e); writer.close(); },
+        handleLLMNewToken: async (token: string) => {
+          await writer.write(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`));
+        },
+        handleLLMEnd: async () => {
+          await writer.write(encoder.encode('data: [DONE]\n\n'));
+          await writer.close();
+        },
+        handleLLMError: async (e: Error) => {
+          console.error("LLM Error:", e);
+          await writer.abort(e);
+        },
       }),
-    });
+    };
+
+    // Initialize the model with the configuration
+    const model = new ChatGoogleGenerativeAI(modelConfig);
 
     const currentLanguageLabel = languages[selectedLanguageCode]?.label || "English";
 
@@ -147,30 +160,22 @@ Remember to keep responses natural, engaging, and aligned with your persona.
 
     await memoryManager.writeToHistory(`AI: ${finalAIResponseContent}\n`, companionKey);
 
-    let aiMessageData: Prisma.MessageUncheckedCreateInput;
-    if (aiEntityType === "companion") {
-      aiMessageData = {
-        content: finalAIResponseContent,
-        role: "system",
-        userId,
-        companionId: aiEntity.id,
-        interviewMateId: null,
-      };
-    } else {
-      aiMessageData = {
-        content: finalAIResponseContent,
-        role: "system",
-        userId,
-        companionId: null,
-        interviewMateId: aiEntity.id,
-      };
-    }
+    const aiMessageData = {
+      content: finalAIResponseContent,
+      role: "system" as const,
+      userId,
+      companionId: aiEntityType === "companion" ? aiEntity.id : null,
+      interviewMateId: aiEntityType === "interviewMate" ? aiEntity.id : null,
+    };
 
     await prismadb.message.create({ data: aiMessageData });
 
-    return new Response(stream, {
-      status: 200,
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    return new Response(stream.readable, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
     });
 
   } catch (error: unknown) {

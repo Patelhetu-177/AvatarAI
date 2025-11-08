@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { getEmbedding } from "@/lib/services/embedding.service";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { PineconeStore } from "@langchain/pinecone";
 import prismadb from "@/lib/prismadb";
 import { getPineconeIndex, initPinecone } from "@/lib/services/pinecone.service";

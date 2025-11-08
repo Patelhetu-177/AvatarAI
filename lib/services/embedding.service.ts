@@ -15,6 +15,7 @@ export async function getEmbedding(text: string): Promise<number[]> {
     return embedding.values;
   } catch (error) {
     console.error('Error generating embedding:', error);
+    // Return a properly sized zero vector matching the expected dimension
     return new Array(768).fill(0);
   }
 }

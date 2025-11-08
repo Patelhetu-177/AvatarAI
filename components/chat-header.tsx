@@ -60,7 +60,7 @@ export const ChatHeader = ({ companion, aiType }: ChatHeaderProps) => {
 
       router.refresh();
       router.push("/");
-    } catch (error) {
+    } catch {
       toast({
         description: "Something went wrong",
         variant: "destructive",
