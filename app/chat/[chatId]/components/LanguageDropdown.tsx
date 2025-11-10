@@ -1,81 +1,111 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Dropdown } from "./Dropdown";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 import i18n from "@/lib/i18n";
 import languages from "@/app/common/languages";
 
-const LanguageDropdown = () => {
-  const [selectedLang, setSelectedLang] = useState("");
+interface LanguageDropdownProps {
+  onLanguageChange?: (lang: string) => void;
+  initialLanguage?: string;
+}
+
+const LanguageDropdown: React.FC<LanguageDropdownProps> = ({
+  onLanguageChange,
+  initialLanguage = "en",
+}) => {
+  const router = useRouter();
+  const [selectedLang, setSelectedLang] = useState(initialLanguage);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    const currentLanguage: string =
-      localStorage.getItem("I18N_LANGUAGE") || "en";
-    setSelectedLang(currentLanguage);
-    if (i18n.language !== currentLanguage) {
-      i18n.changeLanguage(currentLanguage);
-    }
+    setIsClient(true);
   }, []);
 
-  const changeLanguageAction = (lang: string) => {
-    i18n.changeLanguage(lang);
-    localStorage.setItem("I18N_LANGUAGE", lang);
-    setSelectedLang(lang);
-  };
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedLang = localStorage.getItem("I18N_LANGUAGE") || initialLanguage;
+      if (storedLang && storedLang !== selectedLang) {
+        setSelectedLang(storedLang);
+        if (i18n.language !== storedLang) {
+          i18n.changeLanguage(storedLang);
+        }
+      }
+    }
+  }, [initialLanguage, selectedLang]);
+
+  const changeLanguageAction = useCallback((lang: string) => {
+    if (typeof window !== 'undefined') {
+      i18n.changeLanguage(lang);
+      localStorage.setItem("I18N_LANGUAGE", lang);
+      
+      setSelectedLang(lang);
+      
+      if (onLanguageChange) {
+        onLanguageChange(lang);
+      }
+      
+      router.refresh();
+    }
+  }, [onLanguageChange, router]);
+  if (!isClient) {
+    return null;
+  }
 
   return (
-    <React.Fragment>
+    <div className="flex items-center">
       <Dropdown className="relative flex items-center h-header">
         <Dropdown.Trigger
           type="button"
-          className="inline-flex justify-center items-center p-0 text-topbar-item transition-all size-[37.5px] duration-200 ease-linear bg-topbar rounded-md dropdown-toggle btn hover:bg-topbar-item-bg-hover hover:text-topbar-item-hover group-data-[topbar=dark]:bg-topbar-dark group-data-[topbar=dark]:hover:bg-topbar-item-bg-hover-dark group-data-[topbar=dark]:hover:text-topbar-item-hover-dark group-data-[topbar=brand]:bg-topbar-brand group-data-[topbar=brand]:hover:bg-topbar-item-bg-hover-brand group-data-[topbar=brand]:hover:text-topbar-item-hover-brand group-data-[topbar=dark]:dark:bg-zink-700 group-data-[topbar=dark]:dark:hover:bg-zink-600 group-data-[topbar=dark]:dark:text-zink-500 group-data-[topbar=dark]:dark:hover:text-zink-50"
+          className="inline-flex justify-center items-center p-0 text-black transition-all size-[37.5px] duration-200 ease-linear bg-blue-500 rounded-md dropdown-toggle btn hover:bg-blue-600 hover:text-black shadow-sm border border-blue-400"
           id="flagsDropdown"
           data-bs-toggle="dropdown"
         >
           {selectedLang && languages[selectedLang] && (
             <Image
-              src={languages[selectedLang].flag} // Direct access
+              src={languages[selectedLang].flag} 
               alt="header-lang-img"
               width={20}
               height={15}
-              className="h-5 rounded-sm"
+              className="h-5 rounded-sm shadow-sm"
+              priority
             />
           )}
         </Dropdown.Trigger>
         <Dropdown.Content
           placement="right-end"
-          className="absolute z-50 p-4 ltr:text-left rtl:text-right bg-white rounded-md shadow-md !top-4 dropdown-menu min-w-[10rem] flex flex-col gap-4 dark:bg-zink-600"
+          className="absolute z-50 p-4 ltr:text-left rtl:text-right bg-white rounded-md shadow-md !top-4 dropdown-menu min-w-[10rem] flex flex-col gap-4 dark:bg-zink-600 max-h-[300px] overflow-y-auto"
           aria-labelledby="flagsDropdown"
         >
-          {Object.keys(languages).map((key) => (
-            <a
-              href="#!"
-              className={`flex items-center gap-3 group/items language ${
-                selectedLang === key ? "active" : ""
-              }`}
-              data-lang={key}
-              title={languages[key].label}
-              onClick={() => changeLanguageAction(key)}
+          {Object.entries(languages).map(([key, lang]) => (
+            <button
               key={key}
+              type="button"
+              className={`flex items-center gap-3 group/items w-full text-left p-2 rounded hover:bg-gray-100 dark:hover:bg-zink-500 transition-colors text-black ${
+                selectedLang === key ? 'bg-gray-100 dark:bg-zink-500' : ''
+              }`}
+              onClick={() => changeLanguageAction(key)}
+              title={lang.label}
             >
               <Image
-                src={languages[key].flag} // Direct access
-                alt=""
-                width={16}
-                height={12}
-                className="object-cover h-4 rounded-full"
+                src={lang.flag}
+                alt={lang.label}
+                width={20}
+                height={15}
+                className="h-4 w-6 object-cover rounded-sm"
               />
-              <h6 className="transition-all duration-200 ease-linear font-15medium text- text-slate-600 dark:text-zink-200 group-hover/items:text-custom-500">
-                {languages[key].label}
-              </h6>
-            </a>
+              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                {lang.label}
+              </span>
+            </button>
           ))}
         </Dropdown.Content>
       </Dropdown>
-    </React.Fragment>
+    </div>
   );
 };
 
-export default LanguageDropdown;
+export default React.memo(LanguageDropdown);
