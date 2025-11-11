@@ -1,8 +1,8 @@
-import "@/lib/ai-compat";
-import { generateText } from "ai";
-import { google } from "@ai-sdk/google";
 import { db } from "@/firebase/admin";
 import { getRandomInterviewCover } from "@/lib/utils";
+import { ChatService } from "@/lib/services/chat.service";
+
+const chatService = ChatService.getInstance();
 
 export async function POST(request: Request) {
   try {
@@ -21,26 +21,14 @@ Do not add any other commentary or markdown formatting. The output should be a p
 
     let questionsText = "";
     try {
-      const result = await generateText({
-        model: google("gemini-2.5-flash-native-audio-preview-09-2025"),
-        prompt,
-      });
-
-      // result may be a string or an object containing text/output
-      if (typeof result === "string") {
-        questionsText = result;
-      } else if (result && typeof result === "object") {
-        const asRecord = result as unknown as Record<string, unknown>;
-        if (typeof asRecord.text === "string") {
-          questionsText = asRecord.text;
-        } else if (typeof asRecord.output === "string") {
-          questionsText = asRecord.output;
-        } else {
-          questionsText = String(result);
+      const response = await chatService.generateResponse([
+        {
+          role: 'user' as const,
+          content: prompt
         }
-      } else {
-        questionsText = String(result || "");
-      }
+      ]);
+      
+      questionsText = response;
     } catch (sdkError: unknown) {
       const serializeError = (err: unknown) => {
         if (err instanceof Error) return { message: err.message, stack: err.stack };
