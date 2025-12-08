@@ -26,7 +26,7 @@ export function HeroSection() {
           transition={{ delay: 0.3, duration: 0.8 }}
           className="text-black dark:text-white text-2xl sm:text-3xl md:text-5xl font-bold mt-6 leading-snug"
         >
-          Create an Avatar, <br /> Master Your Interview.
+          Create Your Avatar. <br /> Level Up Your Skills.
         </motion.h2>
 
         {/* Description */}
@@ -36,10 +36,13 @@ export function HeroSection() {
           transition={{ delay: 0.6, duration: 1 }}
           className="mt-6 text-gray-700 dark:text-gray-400 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed px-2"
         >
-          Experience next-level conversations with AvatarAI — your gateway to
-          lifelike chats with AI-powered versions of celebrities and experts.
-          Whether you’re preparing for an interview, learning new skills, or
-          just having fun, every interaction feels real.
+          AvatarAI is your next-generation AI learning companion — a powerful
+          platform where you can create lifelike avatars, practice real mock
+          interviews, chat with your documents, and generate quizzes instantly.
+          Whether you’re preparing for technical rounds, mastering new skills,
+          or exploring expert personas, AvatarAI gives you realistic
+          conversations, instant scoring, and personalized feedback that feels
+          truly human.
         </motion.p>
       </div>
     </BackgroundLines>

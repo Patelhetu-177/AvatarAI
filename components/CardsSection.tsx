@@ -38,6 +38,15 @@ const slides = [
     content:
       "Practice with an AI that provides real-time feedback on your answers and helps you prepare for any interview.",
   },
+  {
+  title: "DocHub",
+  button: "Start Chat",
+  src: "/dochub.png",
+  route: "/documents",
+  content:
+    "Chat with your documents using AI-powered retrieval. Upload files, ask questions, and get accurate, cited answers instantly.",
+},
+
 ];
 
 export function CardsSection() {

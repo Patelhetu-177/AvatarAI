@@ -41,6 +41,15 @@ function Footer() {
                 Companion
               </a>
             </li>
+
+            <li>
+              <a
+                href="/documents"
+                className="hover:text-primary-200 transition-colors"
+              >
+                DocHub
+              </a>
+            </li>
           </ul>
         </div>
 
