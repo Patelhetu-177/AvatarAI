@@ -54,7 +54,7 @@
     "lucide-react": "^0.452.0",
     "mammoth": "^1.11.0",
     "motion": "^12.23.12",
-    "next": "^14.2.33",
+    "next": "14.2.35",
     "next-cloudinary": "^6.14.2",
     "next-themes": "^0.3.0",
     "openai": "^4.68.1",
