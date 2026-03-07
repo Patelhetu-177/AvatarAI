@@ -1,13 +1,28 @@
 import { Redis } from "@upstash/redis";
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { PineconeStore } from "@langchain/pinecone";
+import { getEmbedding } from "./services/embedding.service";
 
 export type CompanionKey = {
   companionName: string;
   modelName: string;
   userId: string;
 };
+
+class RestEmbeddings {
+  async embedDocuments(texts: string[]): Promise<number[][]> {
+    const results: number[][] = [];
+    for (const text of texts) {
+      const embedding = await getEmbedding(text);
+      results.push(embedding);
+    }
+    return results;
+  }
+
+  async embedQuery(text: string): Promise<number[]> {
+    return getEmbedding(text);
+  }
+}
 
 export class MemoryManager {
   private static instance: MemoryManager;
@@ -20,8 +35,10 @@ export class MemoryManager {
 
   private async init() {
     if (this.vectorDBClient) return;
-    if (!process.env.PINECONE_API_KEY) throw new Error("PINECONE_API_KEY is not set");
-    if (!process.env.PINECONE_INDEX) throw new Error("PINECONE_INDEX is not set");
+    if (!process.env.PINECONE_API_KEY)
+      throw new Error("PINECONE_API_KEY is not set");
+    if (!process.env.PINECONE_INDEX)
+      throw new Error("PINECONE_INDEX is not set");
 
     this.vectorDBClient = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY,
@@ -42,35 +59,46 @@ export class MemoryManager {
 
   private async generateHash(input: string): Promise<string> {
     const msgBuffer = new TextEncoder().encode(input);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
-  public async vectorSearch(recentChatHistory: string, companionFileName: string) {
-    if (!recentChatHistory || typeof recentChatHistory !== 'string') {
-      console.warn('Invalid recentChatHistory in vectorSearch:', recentChatHistory);
+  public async vectorSearch(
+    recentChatHistory: string,
+    companionFileName: string
+  ) {
+    if (!recentChatHistory || typeof recentChatHistory !== "string") {
+      console.warn(
+        "Invalid recentChatHistory in vectorSearch:",
+        recentChatHistory
+      );
       return [];
     }
 
-    if (!companionFileName || typeof companionFileName !== 'string') {
-      console.warn('Invalid companionFileName in vectorSearch:', companionFileName);
+    if (!companionFileName || typeof companionFileName !== "string") {
+      console.warn(
+        "Invalid companionFileName in vectorSearch:",
+        companionFileName
+      );
       return [];
     }
 
     try {
       if (!this.vectorDBClient) await this.init();
       if (!this.vectorDBClient) {
-        throw new Error('Failed to initialize Pinecone client');
+        throw new Error("Failed to initialize Pinecone client");
       }
 
-      const pineconeIndex = this.vectorDBClient.Index(process.env.PINECONE_INDEX!);
-      const embeddings = new GoogleGenerativeAIEmbeddings({
-        apiKey: process.env.GEMINI_API_KEY!,
-        modelName: "text-embedding-004",
-      });
+      const pineconeIndex = this.vectorDBClient.Index(
+        process.env.PINECONE_INDEX!
+      );
 
-      const inputHash = await this.generateHash(`${companionFileName}:${recentChatHistory}`);
+    const embeddings = new RestEmbeddings();
+
+      const inputHash = await this.generateHash(
+        `${companionFileName}:${recentChatHistory}`
+      );
       const embeddingKey = `embed:${inputHash}`;
       let embedding: number[];
 
@@ -78,32 +106,38 @@ export class MemoryManager {
         const cached = await this.history.get<string>(embeddingKey);
         if (cached) {
           try {
-            const parsed = JSON.parse(cached);
-            if (!Array.isArray(parsed) || !parsed.every(n => typeof n === 'number')) {
-              throw new Error('Invalid cached embedding format');
+            const parsed =
+              typeof cached === "string" ? JSON.parse(cached) : cached;
+            if (
+              !Array.isArray(parsed) ||
+              !parsed.every((n) => typeof n === "number")
+            ) {
+              throw new Error("Invalid cached embedding format");
             }
             embedding = parsed;
           } catch (parseError) {
-            console.error('Failed to parse cached embedding:', parseError);
+            console.error("Failed to parse cached embedding:", parseError);
             await this.history.del(embeddingKey);
-            throw new Error('Invalid cache format');
+            throw new Error("Invalid cache format");
           }
         } else {
           const vector = await embeddings.embedQuery(recentChatHistory);
           embedding = vector;
           try {
-            await this.history.set(embeddingKey, JSON.stringify(vector), { ex: 3600 });
+            await this.history.set(embeddingKey, JSON.stringify(vector), {
+              ex: 3600,
+            });
           } catch (cacheError) {
-            console.error('Failed to cache embedding:', cacheError);
+            console.error("Failed to cache embedding:", cacheError);
           }
         }
       } catch (embeddingError) {
-        console.error('Error in embedding process:', embeddingError);
+        console.error("Error in embedding process:", embeddingError);
         try {
           const vector = await embeddings.embedQuery(recentChatHistory);
           embedding = vector;
         } catch (embedError) {
-          console.error('Failed to generate embedding:', embedError);
+          console.error("Failed to generate embedding:", embedError);
           return [];
         }
       }
@@ -114,47 +148,57 @@ export class MemoryManager {
 
       try {
         const filter = {
-          fileName: { $eq: companionFileName }
+          fileName: { $eq: companionFileName },
         };
-        
-        const similarDocs = await vectorStore.similaritySearchVectorWithScore(
-          embedding,
-          3,
-          { filter }
-        );
-        
+
+        const similarDocs =
+          await vectorStore.similaritySearchVectorWithScore(
+            embedding,
+            3,
+            { filter }
+          );
+
         if (!Array.isArray(similarDocs)) {
-          console.warn('Unexpected response format from similarity search');
+          console.warn("Unexpected response format from similarity search");
           return [];
         }
-        
+
         return similarDocs;
       } catch (filteredSearchError) {
-        console.warn("Filtered vector search failed, trying without filter:", 
-          filteredSearchError instanceof Error ? filteredSearchError.message : 'Unknown error');
-        
+        console.warn(
+          "Filtered vector search failed, trying without filter:",
+          filteredSearchError instanceof Error
+            ? filteredSearchError.message
+            : "Unknown error"
+        );
+
         try {
-          const similarDocs = await vectorStore.similaritySearchVectorWithScore(
-            embedding,
-            3
-          );
-          
+          const similarDocs =
+            await vectorStore.similaritySearchVectorWithScore(embedding, 3);
+
           if (!Array.isArray(similarDocs)) {
-            console.warn('Unexpected response format from fallback similarity search');
+            console.warn(
+              "Unexpected response format from fallback similarity search"
+            );
             return [];
           }
-          
+
           return similarDocs;
         } catch (unfilteredSearchError) {
-          console.error("Unfiltered vector search failed:", 
-            unfilteredSearchError instanceof Error ? unfilteredSearchError.message : 'Unknown error');
+          console.error(
+            "Unfiltered vector search failed:",
+            unfilteredSearchError instanceof Error
+              ? unfilteredSearchError.message
+              : "Unknown error"
+          );
           return [];
         }
       }
     } catch (error) {
-      console.error("Vector search encountered an error:", 
-        error instanceof Error ? error.message : 'Unknown error',
-        error instanceof Error ? error.stack : ''
+      console.error(
+        "Vector search encountered an error:",
+        error instanceof Error ? error.message : "Unknown error",
+        error instanceof Error ? error.stack : ""
       );
       return [];
     }
@@ -192,7 +236,6 @@ export class MemoryManager {
 
   public async limitHistory(companionKey: CompanionKey, maxItems: number) {
     const key = this.generateRedisCompanionKey(companionKey);
-    // Remove all items except the last maxItems
     await this.history.zremrangebyrank(key, 0, -maxItems - 1);
   }
 }

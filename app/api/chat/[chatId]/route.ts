@@ -68,7 +68,7 @@ export async function POST(
     const companionKey = {
       companionName: aiEntity.id,
       userId,
-      modelName: "gemini-1.5-flash-latest",
+      modelName: "gemini-2.5-flash",
     };
 
     const records = await memoryManager.readLatestHistory(companionKey);
@@ -173,7 +173,7 @@ ${relevantHistory || "No additional context available."}`;
       content: finalAIResponseContent,
       timestamp: new Date().toISOString(),
       metadata: {
-        model: "gemini-pro",
+        model: "gemini-2.5-flash",
         tokens: Math.ceil(finalAIResponseContent.length / 4),
         isAI: true,
         responseTime: `${Date.now() - startTime}ms`
@@ -195,7 +195,7 @@ ${relevantHistory || "No additional context available."}`;
       data: aiResponse,
       meta: {
         timestamp: new Date().toISOString(),
-        model: "gemini-pro"
+        model: "gemini-2.5-flash"
       }
     });
 
