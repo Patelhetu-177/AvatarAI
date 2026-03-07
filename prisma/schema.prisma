@@ -1,10 +1,11 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearchPostgres"]
+  previewFeatures = ["fullTextIndex", "fullTextSearch"]
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Document {
