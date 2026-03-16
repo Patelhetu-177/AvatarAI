@@ -3,8 +3,8 @@
 
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/firebase/admin";
+import { inngest } from "@/lib/inngest/client";
 
-// Define the parameter types
 interface SignUpParams {
   uid: string;
   name: string;
@@ -34,6 +34,11 @@ export async function signUp(params: SignUpParams) {
     await db.collection("users").doc(uid).set({
       name,
       email,
+    });
+
+    await inngest.send({
+      name: "app/user.created",
+      data: { email, name },
     });
 
     return {
