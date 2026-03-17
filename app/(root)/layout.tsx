@@ -1,11 +1,15 @@
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
+import { getCurrentUser } from "@/lib/actions/auth.action";
 
-const RootLayout = ({
+const RootLayout = async ({
     children
 }: {
     children: React.ReactNode;
 }) => {
+    // Ensures new users get a Firestore record + welcome email event
+    await getCurrentUser();
+
     return (
         <div className="h-full">
             <Navbar/>

@@ -49,3 +49,74 @@ EXAMPLE OUTPUTS (showing variety — your output should be unique and different 
 <p class="mobile-text" style="margin: 0 0 30px 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">Here's the fun part, {{userName}} — fire up <strong>InterviewMate</strong> and get structured answers to any question on any topic. Need to prep for an interview? Switch to <strong>AI Voice Mock Interviews</strong> and practice like it's the real deal.</p>
 
 <p class="mobile-text" style="margin: 0 0 30px 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">Say hello to your new AI playground, {{userName}}. <strong>Create your own avatar</strong> of anyone you can imagine, or jump into a conversation with Einstein in Hindi, Shakespeare in Gujarati — the world is yours in <strong>15+ languages</strong>.</p>`;
+
+export const MONTHLY_EXPLORE_EMAIL_PROMPT = `Generate HTML content for AvatarAI's feature-exploration email. This content should be inserted into an email template at a {{featureContent}} placeholder.
+
+Recipient name:
+{{userName}}
+
+CRITICAL FORMATTING REQUIREMENTS:
+- Return ONLY clean HTML content with NO markdown, NO code blocks, NO backticks
+- Use ONLY the components below in this exact style family so it matches the current email template
+- Keep output between 450-700 words total
+
+SECTION HEADING:
+<h3 class="mobile-news-title dark-text" style="margin: 30px 0 14px 0; font-size: 20px; font-weight: 700; color: #f8f9fa; line-height: 1.3;">Section Title</h3>
+
+INTRO PARAGRAPH:
+<p class="mobile-text dark-text-secondary" style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.7; color: #CCDADC;">Short engaging intro text</p>
+
+FEATURE CONTAINER:
+<div class="dark-info-box" style="background-color: #212328; padding: 20px; margin: 18px 0; border-radius: 10px; border-left: 3px solid #6C63FF;">
+
+FEATURE TITLE:
+<h4 class="dark-text" style="margin: 0 0 10px 0; font-size: 18px; font-weight: 700; color: #FFFFFF; line-height: 1.4;">Feature Name</h4>
+
+FEATURE DETAILS:
+<ul style="margin: 12px 0 16px 0; padding-left: 0; margin-left: 0; list-style: none;">
+  <li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;">
+    <span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>One practical, easy-to-understand benefit.
+  </li>
+  <li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;">
+    <span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>One concrete use-case for students, professionals, or creators.
+  </li>
+  <li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;">
+    <span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>One quick action users can take immediately.
+  </li>
+</ul>
+
+BOTTOM LINE BLOCK:
+<div style="background-color: #141414; border: 1px solid #374151; padding: 14px; border-radius: 6px; margin: 10px 0 0 0;">
+  <p class="dark-text-secondary" style="margin: 0; font-size: 14px; color: #CCDADC; line-height: 1.5;">💡 <strong style="color: #FDD458;">Bottom Line:</strong> One short plain-English summary of why this feature is useful.</p>
+</div>
+
+</div>
+
+SECTION DIVIDER:
+<div style="border-top: 1px solid #374151; margin: 28px 0 20px 0;"></div>
+
+CONTENT REQUIREMENTS:
+- Cover ALL 6 core AvatarAI features exactly once each:
+  1) Chat with iconic AI avatars
+  2) Create custom companions
+  3) AI mock interviews
+  4) InterviewMate structured Q&A
+  5) AI-generated quizzes
+  6) Chat with uploaded documents
+- Do not repeat a feature heading
+- Keep language simple, direct, and conversational
+- Focus on practical value and real outcomes
+- Avoid hype-only writing; each feature needs useful specifics
+- Mention that AvatarAI supports 15+ languages near the end
+- End with a short motivating paragraph encouraging users to visit AvatarAI
+
+VOICE & STYLE:
+- Friendly and helpful, not robotic
+- Crisp and skimmable
+- Everyday words over technical jargon
+- Make it feel actionable, not generic
+
+OUTPUT RULES:
+- Return only the HTML fragment to inject at {{featureContent}}
+- No outer <html>, <head>, or <body> tags
+- No markdown, no explanation text before/after HTML`;
