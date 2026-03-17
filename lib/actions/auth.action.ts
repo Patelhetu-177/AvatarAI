@@ -59,38 +59,41 @@ export async function signUp(params: SignUpParams) {
 export async function getCurrentUser(): Promise<User | null> {
   const { userId } = auth();
 
+
   if (!userId) {
     return null;
   }
 
   try {
     const clerkUser = await clerkClient.users.getUser(userId);
+    console.log("[getCurrentUser] Clerk user found:", clerkUser.id, clerkUser.emailAddresses?.[0]?.emailAddress);
 
     const userRecord = await db.collection("users").doc(userId).get();
+    console.log("[getCurrentUser] Firestore record exists:", userRecord.exists);
 
     if (!userRecord.exists) {
-      console.warn("User exists in Clerk but not Firestore. Creating record.");
-      await db
-        .collection("users")
-        .doc(userId)
-        .set({
-          name: clerkUser.firstName || "User",
-          email: clerkUser.emailAddresses?.[0]?.emailAddress,
+      const name = clerkUser.firstName || "User";
+      const email = clerkUser.emailAddresses?.[0]?.emailAddress;
+
+      await db.collection("users").doc(userId).set({ name, email });
+
+      if (email) {
+        await inngest.send({
+          name: "app/user.created",
+          data: { email, name },
         });
+      } else {
+        console.error("[getCurrentUser] No email found on Clerk user, skipping Inngest event");
+      }
 
-      return {
-        id: userId,
-        name: clerkUser.firstName || "User",
-        email: clerkUser.emailAddresses?.[0]?.emailAddress,
-      };
+      return { id: userId, name, email };
     }
-
     return {
       ...userRecord.data(),
       id: userRecord.id,
     } as User;
   } catch (error) {
-    console.error(error);
+    console.error("[getCurrentUser] Error:", error);
     return null;
   }
 }
