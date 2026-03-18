@@ -19,7 +19,7 @@ const FALLBACK_INTRO = `<p class="mobile-text" style="margin: 0 0 30px 0; font-s
 
 const FALLBACK_MONTHLY_FEATURE_CONTENT = `<div class="dark-info-box" style="background-color: #212328; padding: 20px; margin: 18px 0; border-radius: 10px; border-left: 3px solid #6C63FF;"><h4 class="dark-text" style="margin: 0 0 10px 0; font-size: 18px; font-weight: 700; color: #FFFFFF; line-height: 1.4;">Your AvatarAI Core Features</h4><ul style="margin: 12px 0 16px 0; padding-left: 0; margin-left: 0; list-style: none;"><li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;"><span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Chat with iconic AI avatars for ideas, learning, and perspective.</li><li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;"><span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Create custom companions tailored to your own style and goals.</li><li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;"><span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Practice mock interviews and improve with instant AI feedback.</li><li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;"><span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Use InterviewMate for structured Q&A and faster topic mastery.</li><li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;"><span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Generate smart quizzes and track where you can improve next.</li><li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;"><span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Upload PDF, Word, or Excel files and chat with your documents.</li></ul><div style="background-color: #141414; border: 1px solid #374151; padding: 14px; border-radius: 6px; margin: 10px 0 0 0;"><p class="dark-text-secondary" style="margin: 0; font-size: 14px; color: #CCDADC; line-height: 1.5;">💡 <strong style="color: #FDD458;">Bottom Line:</strong> AvatarAI gives you one place to learn, practice, and build confidence every day.</p></div></div>`;
 
-export const sendSignUpEmail = inngest.createFunction(
+export const sendSignUpEmailAvatarAI = inngest.createFunction(
   { id: "send-signup-email" },
   { event: "app/user.created" },
   async ({ event, step }) => {
@@ -79,7 +79,6 @@ export const sendSignUpEmail = inngest.createFunction(
 
 export const sendMonthlyExploreEmail = inngest.createFunction(
   { id: "monthly-explore-email" },
-  // [{ event: "app/send.monthly.explore" }, { cron: "*/5 * * * *" }], // every 5 minutes (temporary test schedule)
    [{ event: "app/send.monthly.explore" }, { cron: "30 6 1 * *" }], // 12 PM IST on 1st day of each month
   async ({ step }) => {
     const users = await step.run(
@@ -127,29 +126,56 @@ export const sendMonthlyExploreEmail = inngest.createFunction(
       },
     );
 
-    const result = await step.run("send-explore-emails", async () => {
-      const settled = await Promise.allSettled(
-        usersWithContent.map(({ email, name, featureContent }) => {
-          return sendMonthlyExploreCampaignEmail({
-            email,
-            name,
-            featureContent,
-          });
-        }),
+    // Batch sending: 5 users at a time with 2-minute delays
+    const BATCH_SIZE = 5;
+    const BATCH_DELAY_MS = 2 * 60 * 1000; // 2 minutes in milliseconds
+    let totalSent = 0;
+    let totalFailed = 0;
+
+    for (let i = 0; i < usersWithContent.length; i += BATCH_SIZE) {
+      const batch = usersWithContent.slice(i, i + BATCH_SIZE);
+      const batchIndex = Math.floor(i / BATCH_SIZE);
+
+      const result = await step.run(
+        `send-explore-emails-batch-${batchIndex}`,
+        async () => {
+          const settled = await Promise.allSettled(
+            batch.map(({ email, name, featureContent }) => {
+              return sendMonthlyExploreCampaignEmail({
+                email,
+                name,
+                featureContent,
+              });
+            }),
+          );
+
+          const sent = settled.filter(
+            (item) => item.status === "fulfilled",
+          ).length;
+          const failed = settled.length - sent;
+
+          console.log(
+            `[Inngest] Batch ${batchIndex}: Sent ${sent}/${batch.length} emails`,
+          );
+
+          return { sent, failed };
+        },
       );
 
-      const sent = settled.filter((item) => item.status === "fulfilled").length;
-      const failed = settled.length - sent;
+      totalSent += result.sent;
+      totalFailed += result.failed;
 
-      return { sent, failed };
-    });
+      if (i + BATCH_SIZE < usersWithContent.length) {
+        await step.sleep("wait-before-next-batch-" + batchIndex, BATCH_DELAY_MS);
+      }
+    }
 
     return {
       success: true,
-      message: "Explore emails processed",
+      message: "Explore emails processed in batches",
       total: users.length,
-      sent: result.sent,
-      failed: result.failed,
+      sent: totalSent,
+      failed: totalFailed,
     };
   },
 );

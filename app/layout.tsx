@@ -7,11 +7,12 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
+import {  ZyraAIAgentWrapper } from "@/components/ZyraAIAgentWrapper";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "AvatarAI",
-  description: "AI-powered image generator",
+  description: "AI-powered Web Application",
 };
 
 export default function RootLayout({
@@ -31,6 +32,7 @@ export default function RootLayout({
           >
             {children}
             <Toaster />
+            <ZyraAIAgentWrapper  />
           </ThemeProvider>
         </body>
       </html>
