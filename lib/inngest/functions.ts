@@ -20,7 +20,7 @@ const FALLBACK_INTRO = `<p class="mobile-text" style="margin: 0 0 30px 0; font-s
 const FALLBACK_MONTHLY_FEATURE_CONTENT = `<div class="dark-info-box" style="background-color: #212328; padding: 20px; margin: 18px 0; border-radius: 10px; border-left: 3px solid #6C63FF;"><h4 class="dark-text" style="margin: 0 0 10px 0; font-size: 18px; font-weight: 700; color: #FFFFFF; line-height: 1.4;">Your AvatarAI Core Features</h4><ul style="margin: 12px 0 16px 0; padding-left: 0; margin-left: 0; list-style: none;"><li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;"><span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Chat with iconic AI avatars for ideas, learning, and perspective.</li><li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;"><span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Create custom companions tailored to your own style and goals.</li><li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;"><span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Practice mock interviews and improve with instant AI feedback.</li><li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;"><span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Use InterviewMate for structured Q&A and faster topic mastery.</li><li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;"><span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Generate smart quizzes and track where you can improve next.</li><li class="dark-text-secondary" style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.6; color: #CCDADC;"><span style="color: #FDD458; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Upload PDF, Word, or Excel files and chat with your documents.</li></ul><div style="background-color: #141414; border: 1px solid #374151; padding: 14px; border-radius: 6px; margin: 10px 0 0 0;"><p class="dark-text-secondary" style="margin: 0; font-size: 14px; color: #CCDADC; line-height: 1.5;">💡 <strong style="color: #FDD458;">Bottom Line:</strong> AvatarAI gives you one place to learn, practice, and build confidence every day.</p></div></div>`;
 
 export const sendSignUpEmailAvatarAI = inngest.createFunction(
-  { id: "send-signup-email" },
+  { id: "send-signup-email-AvatarAI" },
   { event: "app/user.created" },
   async ({ event, step }) => {
     console.log(
@@ -78,7 +78,7 @@ export const sendSignUpEmailAvatarAI = inngest.createFunction(
 );
 
 export const sendMonthlyExploreEmail = inngest.createFunction(
-  { id: "monthly-explore-email" },
+  { id: "send-monthly-explore-email-AvatarAI" },
    [{ event: "app/send.monthly.explore" }, { cron: "30 6 1 * *" }], // 12 PM IST on 1st day of each month
   async ({ step }) => {
     const users = await step.run(
