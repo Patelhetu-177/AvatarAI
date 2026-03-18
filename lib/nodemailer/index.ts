@@ -25,10 +25,7 @@ interface ExploreEmailData {
 }
 
 const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ||
-  (process.env.NODE_ENV === "development"
-    ? "http://localhost:3000"
-    : "https://avatar-ai-swart.vercel.app");
+  process.env.NEXT_PUBLIC_APP_URL || "https://avatar-ai-swart.vercel.app";
 
 export const sendWelcomeEmail = async ({
   email,
@@ -57,7 +54,10 @@ export const sendMonthlyExploreCampaignEmail = async ({
   featureContent,
 }: ExploreEmailData) => {
   const unsubscribeUrl = `${APP_URL}/api/unsubscribe?email=${encodeURIComponent(email)}`;
-  const htmlTemplate = MONTHLY_EXPLORE_EMAIL_TEMPLATE.replace(/\{\{name\}\}/g, name)
+  const htmlTemplate = MONTHLY_EXPLORE_EMAIL_TEMPLATE.replace(
+    /\{\{name\}\}/g,
+    name,
+  )
     .replace("{{featureContent}}", featureContent || "")
     .replace("{{unsubscribeUrl}}", unsubscribeUrl);
 
