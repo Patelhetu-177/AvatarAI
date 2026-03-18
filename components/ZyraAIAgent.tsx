@@ -100,12 +100,15 @@ export function ZyraAIAgent() {
           timestamp: Date.now(),
         },
       ]);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+
       setMessages((prev) => [
         ...prev,
         {
           id: `error-${Date.now()}`,
-          content: `⚠️ Sorry, I encountered an error: ${error.message}`,
+          content: `⚠️ Sorry, I encountered an error: ${errorMessage}`,
           role: "assistant",
           timestamp: Date.now(),
         },
