@@ -74,8 +74,7 @@ export class ChatService {
       });
 
       const lastMessage = chatHistory[chatHistory.length - 1];
-      console.log('Sending message:', lastMessage.parts[0].text);
-      
+     
       const result = await chat.sendMessage(lastMessage.parts[0].text);
       const response = await result.response;
       const text = response.text();

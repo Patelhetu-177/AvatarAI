@@ -114,42 +114,15 @@ export const ChatClient = ({ initialData, aiType }: ChatClientProps) => {
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("Could not get reader for response body.");
+      const data = await response.json();
+      
+      const responseContent = data?.data?.content || data?.content || "No response received";
 
-      let accumulatedResponse = "";
-      let messageIndexToUpdate = messages.length;
-
-      setMessages((current) => {
-        const newMessages = [...current, { 
-          role: "system" as const, 
-          content: "", 
-          metadata: { language: currentLanguage } 
-        }];
-        messageIndexToUpdate = newMessages.length - 1;
-        return newMessages;
-      });
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = new TextDecoder().decode(value);
-        accumulatedResponse += chunk;
-
-        setMessages((current) => {
-          if (messageIndexToUpdate !== -1 && current[messageIndexToUpdate]) {
-            const updatedMessages = [...current];
-            updatedMessages[messageIndexToUpdate] = {
-              ...updatedMessages[messageIndexToUpdate],
-              content: accumulatedResponse,
-              metadata: { language: currentLanguage }
-            };
-            return updatedMessages;
-          }
-          return current;
-        });
-      }
+      setMessages((current) => [...current, { 
+        role: "system" as const, 
+        content: responseContent, 
+        metadata: { language: currentLanguage } 
+      }]);
     } catch (error) {
       console.error("Error:", error);
       const errorMessage = error instanceof Error ? error.message : "An error occurred";
