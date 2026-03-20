@@ -15,8 +15,6 @@ export interface DocumentMetadata {
 
 export async function loadDocument(file: File): Promise<{ pageContent: string; metadata: DocumentMetadata }[]> {
   try {
-    console.log(`Processing file: ${file.name}, Size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-    
     const documents = await documentService.processDocument(file);
     
     await documentService.storeDocumentVectors(documents);

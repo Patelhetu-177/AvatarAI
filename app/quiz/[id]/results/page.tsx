@@ -73,10 +73,6 @@ export default async function QuizResultsPage({ params }: { params: { id: string
   const totalQuestions = submission.quiz.questions.length;
   const score = submission.score || Math.round((correctAnswersCount / totalQuestions) * 100);
   
-  console.log('Results:', results);
-  console.log('Correct count:', correctAnswersCount);
-  console.log('Score from DB:', submission.score);
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">

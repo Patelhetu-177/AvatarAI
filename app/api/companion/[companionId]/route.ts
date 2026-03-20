@@ -44,8 +44,7 @@ export async function PATCH(
     });
 
     return NextResponse.json(companion);
-  } catch (error) {
-    console.log("[COMPANION_PATCH]", error);
+  } catch {
     return new NextResponse("Internal error", { status: 500 });
   }
 }
@@ -69,8 +68,7 @@ export async function DELETE(
     });
     return NextResponse.json(companion);
 
-  } catch (error) {
-    console.log("[COMPANION_DELETE]", error);
+  } catch {
     return new NextResponse("Internal error", { status: 500 });
   }
 }

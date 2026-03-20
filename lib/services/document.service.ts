@@ -100,11 +100,10 @@ export class DocumentService {
     const fileType = file.name.split(".").pop()?.toLowerCase() || "";
     const cacheKey = this.getCacheKey(file.name);
 
-    // Check cache — RedisService.get() already deserializes, so NO JSON.parse needed
     try {
-      const cached = await this.redis.get<Document<DocumentMetadata>[]>(cacheKey);
+      const cached =
+        await this.redis.get<Document<DocumentMetadata>[]>(cacheKey);
       if (cached) {
-        // cached is already a parsed object thanks to RedisService.get()
         console.log(`Cache hit for document: ${file.name}`);
         return Array.isArray(cached) ? cached : [];
       }
@@ -114,8 +113,6 @@ export class DocumentService {
         cacheError,
       );
     }
-
-    const startTime = Date.now();
 
     const metadata: DocumentMetadata = {
       source: file.name,
@@ -147,8 +144,6 @@ export class DocumentService {
           return `Sheet: ${sheetName}\n${XLSX.utils.sheet_to_csv(worksheet)}`;
         }).join("\n\n");
       } else if (["ppt", "pptx"].includes(fileType)) {
-        console.log("Processing PowerPoint document...");
-
         try {
           const zip = await JSZip.loadAsync(buffer);
           const slideTexts: string[] = [];
@@ -170,8 +165,7 @@ export class DocumentService {
 
           while (zip.file(`ppt/notesSlides/notesSlide${noteIndex}.xml`)) {
             const notePath = `ppt/notesSlides/notesSlide${noteIndex}.xml`;
-            const noteContent =
-              (await zip.file(notePath)?.async("text")) || "";
+            const noteContent = (await zip.file(notePath)?.async("text")) || "";
             const noteText = this.extractTextFromSlide(noteContent);
             if (noteText) {
               noteTexts.push(`Notes ${noteIndex}:\n${noteText}\n`);
@@ -184,10 +178,6 @@ export class DocumentService {
           if (!content) {
             throw new Error("No extractable text found in PowerPoint file");
           }
-
-          console.log(
-            `Extracted ${content.length} characters from PowerPoint in ${Date.now() - startTime}ms`,
-          );
         } catch (error) {
           console.error("Error processing PowerPoint file:", error);
           throw new Error(
@@ -201,14 +191,8 @@ export class DocumentService {
       }
 
       if (!content || content.trim().length === 0) {
-        throw new Error(
-          `No text content could be extracted from ${file.name}`,
-        );
+        throw new Error(`No text content could be extracted from ${file.name}`);
       }
-
-      console.log(
-        `Extracted ${content.length} characters from ${file.name} in ${Date.now() - startTime}ms`,
-      );
 
       const formattedDoc = formatDocumentContent(
         new Document({
@@ -247,9 +231,6 @@ export class DocumentService {
           appendChunkOverlapHeader: true,
         },
       )) as unknown as Document<DocumentMetadata>[];
-
-      console.log(`Split document into ${splitDocs.length} chunks`);
-
       // Cache — store as JSON string
       try {
         await this.redis.set(
@@ -282,9 +263,6 @@ export class DocumentService {
       if (!documents || documents.length === 0) {
         throw new Error("No documents provided for vector storage");
       }
-
-      console.log(`Storing ${documents.length} document chunks in Pinecone`);
-
       const embeddings = new CustomGoogleEmbeddings(this.getEmbedding);
 
       const testEmbedding = await embeddings.embedQuery(
@@ -295,9 +273,6 @@ export class DocumentService {
           "Embedding model returned empty vector. Check GOOGLE_GENERATIVE_AI_API_KEY.",
         );
       }
-      console.log(
-        `Embedding dimension validated: ${testEmbedding.length} dimensions`,
-      );
 
       const batchSize = 10;
       for (let i = 0; i < documents.length; i += batchSize) {
@@ -347,7 +322,7 @@ export class DocumentService {
     } catch (error) {
       console.error("Error searching similar documents:", error);
       throw new Error("Failed to search similar documents");
-    } 
+    }
   }
 }
 

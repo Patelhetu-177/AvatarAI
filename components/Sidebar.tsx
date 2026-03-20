@@ -10,6 +10,7 @@ import {
   AudioLines,
   Bot,
   ShieldQuestionIcon,
+  ImageIcon,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -34,6 +35,12 @@ export const Sidebar = () => {
       icon: ShieldQuestionIcon,
       href: "/quiz",
       lable: "Quiz",
+      pro: false,
+    },
+    {
+      icon: ImageIcon,
+      href: "/image-gen",
+      lable: "ImageGen",
       pro: false,
     },
     {
