@@ -59,18 +59,13 @@ export async function signUp(params: SignUpParams) {
 export async function getCurrentUser(): Promise<User | null> {
   const { userId } = auth();
 
-
   if (!userId) {
     return null;
   }
 
   try {
     const clerkUser = await clerkClient.users.getUser(userId);
-    console.log("[getCurrentUser] Clerk user found:", clerkUser.id, clerkUser.emailAddresses?.[0]?.emailAddress);
-
     const userRecord = await db.collection("users").doc(userId).get();
-    console.log("[getCurrentUser] Firestore record exists:", userRecord.exists);
-
     if (!userRecord.exists) {
       const name = clerkUser.firstName || "User";
       const email = clerkUser.emailAddresses?.[0]?.emailAddress;
@@ -83,7 +78,9 @@ export async function getCurrentUser(): Promise<User | null> {
           data: { email, name },
         });
       } else {
-        console.error("[getCurrentUser] No email found on Clerk user, skipping Inngest event");
+        console.error(
+          "[getCurrentUser] No email found on Clerk user, skipping Inngest event",
+        );
       }
 
       return { id: userId, name, email };

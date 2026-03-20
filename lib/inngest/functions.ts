@@ -23,11 +23,6 @@ export const sendSignUpEmailAvatarAI = inngest.createFunction(
   { id: "send-signup-email-AvatarAI" },
   { event: "app/user.created" },
   async ({ event, step }) => {
-    console.log(
-      "[Inngest] Function invoked. Full event.data:",
-      JSON.stringify(event.data),
-    );
-
     const email = event.data.email as string | undefined;
     const name = (event.data.name as string) || "there";
 
@@ -38,9 +33,6 @@ export const sendSignUpEmailAvatarAI = inngest.createFunction(
       );
       return { success: false, message: "No email provided" };
     }
-
-    console.log("[Inngest] Processing welcome email for:", { email, name });
-
     const introText = await step.run("generate-welcome-intro", async () => {
       try {
         const prompt = PERSONALIZED_WELCOME_EMAIL_PROMPT.replace(
@@ -79,7 +71,7 @@ export const sendSignUpEmailAvatarAI = inngest.createFunction(
 
 export const sendMonthlyExploreEmail = inngest.createFunction(
   { id: "send-monthly-explore-email-AvatarAI" },
-   [{ event: "app/send.monthly.explore" }, { cron: "30 6 1 * *" }], // 12 PM IST on 1st day of each month
+  [{ event: "app/send.monthly.explore" }, { cron: "30 6 1 * *" }], // 12 PM IST on 1st day of each month
   async ({ step }) => {
     const users = await step.run(
       "get-subscribed-users",
@@ -154,10 +146,6 @@ export const sendMonthlyExploreEmail = inngest.createFunction(
           ).length;
           const failed = settled.length - sent;
 
-          console.log(
-            `[Inngest] Batch ${batchIndex}: Sent ${sent}/${batch.length} emails`,
-          );
-
           return { sent, failed };
         },
       );
@@ -166,7 +154,10 @@ export const sendMonthlyExploreEmail = inngest.createFunction(
       totalFailed += result.failed;
 
       if (i + BATCH_SIZE < usersWithContent.length) {
-        await step.sleep("wait-before-next-batch-" + batchIndex, BATCH_DELAY_MS);
+        await step.sleep(
+          "wait-before-next-batch-" + batchIndex,
+          BATCH_DELAY_MS,
+        );
       }
     }
 

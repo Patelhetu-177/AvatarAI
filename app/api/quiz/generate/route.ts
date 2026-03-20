@@ -23,11 +23,7 @@ export async function POST(req: Request) {
     const validEducationLevels = ['associate', 'bachelors', 'masters', 'phd', 'postdoc', 'other'];
     const isNumericGrade = !isNaN(Number(grade));
     const isEducationLevel = validEducationLevels.includes(grade);
-    
-    console.log('Received grade:', grade);
-    console.log('isNumericGrade:', isNumericGrade);
-    console.log('isEducationLevel:', isEducationLevel);
-    
+ 
     if (!isNumericGrade && !isEducationLevel) {
       return new NextResponse(
         JSON.stringify({ 
@@ -143,9 +139,8 @@ export async function POST(req: Request) {
         });
 
         const results = await Promise.all(storagePromises);
-        const successCount = results.filter((result): result is boolean => result !== null).length;
-        console.log(`Successfully stored ${successCount} out of ${quiz.questions.length} embeddings in Pinecone`);
-        
+        console.log(`Successfully stored ${results.filter(Boolean).length} embeddings`);
+
       } catch (error) {
         console.error('Error in parallel embedding storage:', {
           error: error instanceof Error ? error.message : 'Unknown error',

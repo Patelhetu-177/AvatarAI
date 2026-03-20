@@ -47,8 +47,7 @@ export async function PATCH(
     });
 
     return NextResponse.json(interviewMate);
-  } catch (error) {
-    console.log("[INTERVIEWMATE_PATCH]", error);
+  } catch {
     return new NextResponse("Internal error", { status: 500 });
   }
 }
@@ -72,8 +71,7 @@ export async function DELETE(
     });
     return NextResponse.json(interviewMate);
 
-  } catch (error) {
-    console.log("[INTERVIEWMATE_DELETE]", error);
+  } catch {
     return new NextResponse("Internal error", { status: 500 });
   }
 }

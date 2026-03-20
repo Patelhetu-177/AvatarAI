@@ -1,10 +1,10 @@
-import { Redis } from '@upstash/redis';
+import { Redis } from "@upstash/redis";
 
-const CACHE_TTL = 60 * 60; 
+const CACHE_TTL = 60 * 60;
 
 const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || '',
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
+  url: process.env.UPSTASH_REDIS_REST_URL || "",
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
 });
 
 export async function getCachedQuiz(cacheKey: string) {
@@ -16,32 +16,43 @@ export async function getCachedQuiz(cacheKey: string) {
     }
 
     console.log(`[Redis] Cache hit for key: ${cacheKey}`);
-    
-    if (typeof cached === 'object' && cached !== null) {
+
+    if (typeof cached === "object" && cached !== null) {
       return cached;
     }
-    
-    if (typeof cached === 'string' && cached === '[object Object]') {
-      console.warn(`[Redis] Found string '[object Object]' in cache for key: ${cacheKey}, returning null`);
+
+    if (typeof cached === "string" && cached === "[object Object]") {
+      console.warn(
+        `[Redis] Found string '[object Object]' in cache for key: ${cacheKey}, returning null`,
+      );
       return null;
     }
-    
+
     try {
-      return typeof cached === 'string' ? JSON.parse(cached) : cached;
+      return typeof cached === "string" ? JSON.parse(cached) : cached;
     } catch (parseError) {
-      console.error(`[Redis] Error parsing cached data for key ${cacheKey}:`, parseError);
+      console.error(
+        `[Redis] Error parsing cached data for key ${cacheKey}:`,
+        parseError,
+      );
       return null;
     }
   } catch (error) {
-    console.error(`[Redis] Error getting cached data for key ${cacheKey}:`, error);
+    console.error(
+      `[Redis] Error getting cached data for key ${cacheKey}:`,
+      error,
+    );
     return null;
   }
 }
 
-export async function cacheQuiz<T>(cacheKey: string, data: T, ttl: number = CACHE_TTL) {
+export async function cacheQuiz<T>(
+  cacheKey: string,
+  data: T,
+  ttl: number = CACHE_TTL,
+) {
   try {
     await redis.setex(cacheKey, ttl, JSON.stringify(data));
-    console.log(`[Redis] Cached data for key: ${cacheKey} with TTL: ${ttl} seconds`);
   } catch (error) {
     console.error(`[Redis] Error caching data for key ${cacheKey}:`, error);
     throw error;

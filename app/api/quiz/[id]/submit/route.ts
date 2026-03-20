@@ -2,15 +2,6 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismadb';
 import { auth } from '@clerk/nextjs/server';
 
-type SubmissionResult = {
-    questionId: string;
-    questionText: string;
-    userAnswer: string;
-    correctAnswer: string;
-    isCorrect: boolean;
-    options: Record<string, string>;
-};
-
 export async function POST(
     request: Request,
     { params }: { params: { id: string } }
@@ -65,25 +56,9 @@ export async function POST(
             suggestions: {},
             results: JSON.parse(JSON.stringify(results))
         };
-
-        console.log('Saving submission data:', JSON.stringify(submissionData, null, 2));
-
         const submission = await prisma.submission.create({
             data: submissionData
         });
-
-        console.log('Submission saved successfully:', submission.id);
-        
-        interface SubmissionWithResults extends Omit<typeof submission, 'results'> {
-            results: SubmissionResult[] | null;
-        }
-        const submissionWithResults = submission as SubmissionWithResults;
-        const parsedResults = submissionWithResults.results ? 
-            (Array.isArray(submissionWithResults.results) ? 
-                submissionWithResults.results : 
-                JSON.parse(JSON.stringify(submissionWithResults.results))) : [];
-        console.log('Results saved:', parsedResults);
-
 
         return NextResponse.json({
 submissionId: submission.id,
