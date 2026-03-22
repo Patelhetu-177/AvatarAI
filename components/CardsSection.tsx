@@ -47,6 +47,12 @@ const slides = [
     "Chat with your documents using AI-powered retrieval. Upload files, ask questions, and get accurate, cited answers instantly.",
 },
 
+  {
+    title: "Resume Analyzer",
+    button: "Analyze Resume",
+    src: "/resume-analyzer.png",
+    route: "/resume-analyzer",
+  },
 ];
 
 export function CardsSection() {

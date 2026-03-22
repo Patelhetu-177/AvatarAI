@@ -11,6 +11,7 @@ import {
   Bot,
   ShieldQuestionIcon,
   ImageIcon,
+  FileText,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -50,6 +51,12 @@ export const Sidebar = () => {
       pro: false,
     },
     {
+      icon: FileText,
+      href: "/resume-analyzer",
+      lable: "Resume Analyzer",
+      pro: false,
+    },
+    {
       icon: BotIcon,
       href: "/companion",
       lable: "Companion",
@@ -72,11 +79,11 @@ export const Sidebar = () => {
       href: "/contact",
       lable: "Contact",
       pro: false,
-    },
+    }
   ];
 
   return (
-    <div className="space-y-4 flex flex-col h-full text-primary bg-secondary">
+    <div className=" flex w-40 flex-col h-full text-primary bg-secondary">
       <div className="p-3 flex flex-1 justify-center">
         <div className="space-y-2">
           {routes.map((route) => (
