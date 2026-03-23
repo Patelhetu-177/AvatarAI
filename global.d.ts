@@ -1,13 +1,4 @@
-// Puter AI fallback global type
-interface PuterAI {
-  ai: {
-    txt2img(prompt: string): Promise<HTMLImageElement>;
-  };
-}
-
-interface Window {
-  puter?: PuterAI;
-}
+// ...existing code...
 // global.d.ts
 
 // The SpeechRecognition interface definition with all properties and event handlers
