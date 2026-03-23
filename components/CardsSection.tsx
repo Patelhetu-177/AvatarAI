@@ -50,8 +50,10 @@ const slides = [
   {
     title: "Resume Analyzer",
     button: "Analyze Resume",
-    src: "/resume-analyzer.png",
+    src: "/resume.png",
     route: "/resume-analyzer",
+    content:
+      "Upload your resume and receive instant, AI-powered analysis with actionable feedback to improve your chances of landing your dream job.",
   },
 ];
 

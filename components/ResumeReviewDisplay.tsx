@@ -81,30 +81,28 @@ export const ResumeReviewDisplay: React.FC<ResumeReviewDisplayProps> = ({
       {sections.map((section, idx) => (
         <div
           key={idx}
-          className="bg-white border rounded-2xl shadow-sm hover:shadow-md transition p-6"
+          className="bg-white dark:bg-neutral-900 border dark:border-neutral-700 rounded-2xl shadow-sm hover:shadow-md transition p-6"
         >
           {/* Header */}
           <div className="flex items-center gap-2 mb-4">
             {getIcon(section.title)}
-            <h2 className="text-lg font-semibold text-gray-800">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
               {section.title}
             </h2>
           </div>
-
           {/* Content */}
           {section.content && (
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
               {section.content}
             </p>
           )}
-
           {/* Bullets */}
           {section.bullets.length > 0 && (
             <ul className="space-y-2 pl-4">
               {section.bullets.map((b, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
                   <CheckCircle className="w-4 h-4 mt-1 text-green-500" />
-                  <span className="text-gray-700 leading-relaxed">
+                  <span className="text-gray-700 dark:text-gray-200 leading-relaxed">
                     {highlightText(b)}
                   </span>
                 </li>

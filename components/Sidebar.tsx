@@ -39,15 +39,15 @@ export const Sidebar = () => {
       pro: false,
     },
     {
-      icon: ImageIcon,
-      href: "/image-gen",
-      lable: "ImageGen",
-      pro: false,
-    },
-    {
       icon: Bot,
       href: "/documents",
       lable: "DocHub",
+      pro: false,
+    },
+    {
+      icon: ImageIcon,
+      href: "/image-studio",
+      lable: "Image Studio",  
       pro: false,
     },
     {
@@ -83,7 +83,7 @@ export const Sidebar = () => {
   ];
 
   return (
-    <div className=" flex w-40 flex-col h-full text-primary bg-secondary">
+    <div className=" flex w-20 flex-col h-full text-primary bg-secondary insert-y-20">
       <div className="p-3 flex flex-1 justify-center">
         <div className="space-y-2">
           {routes.map((route) => (
