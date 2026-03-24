@@ -6,10 +6,12 @@ function Footer() {
         <div>
           <h2 className="text-lg font-semibold mb-4">About AvatarAI</h2>
           <p className="text-gray-700 dark:text-gray-400 text-sm leading-relaxed">
-            Powered by <span className="font-semibold">AvatarAI</span> —
-            bringing you lifelike avatars, smarter conversations, and endless
-            possibilities. Redefine how you connect, learn, and express yourself
-            online.
+            <span className="font-semibold">AvatarAI</span> is your all-in-one
+            AI platform for learning, practice, and creativity. Chat with
+            lifelike avatars, create your own companions, practice interviews,
+            analyze your resume, transform images, chat with documents, and take
+            quizzes—all in 15+ languages. Unlock smarter conversations,
+            personalized feedback, and endless ways to grow.
           </p>
         </div>
 
@@ -27,10 +29,34 @@ function Footer() {
             </li>
             <li>
               <a
-                href="/interviewz"
+                href="/quiz"
                 className="hover:text-primary-200 transition-colors"
               >
-                InterviewMate
+                Quiz
+              </a>
+            </li>
+            <li>
+              <a
+                href="/documents"
+                className="hover:text-primary-200 transition-colors"
+              >
+                DocHub
+              </a>
+            </li>
+            <li>
+              <a
+                href="/image-studio"
+                className="hover:text-primary-200 transition-colors"
+              >
+                Image Studio
+              </a>
+            </li>
+            <li>
+              <a
+                href="/resume-analyzer"
+                className="hover:text-primary-200 transition-colors"
+              >
+                Resume Analyzer
               </a>
             </li>
             <li>
@@ -41,13 +67,12 @@ function Footer() {
                 Companion
               </a>
             </li>
-
             <li>
               <a
-                href="/documents"
+                href="/interviewz"
                 className="hover:text-primary-200 transition-colors"
               >
-                DocHub
+                InterviewMate
               </a>
             </li>
           </ul>

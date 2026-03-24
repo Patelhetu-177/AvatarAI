@@ -584,6 +584,10 @@ export default function ImageStudioDashboard() {
 
       if (!res.ok) {
         const error = await res.json();
+        if (error.upgradeRequired) {
+          toast.error("Free quota exceeded. Upgrade to Pro for unlimited image transforms.");
+          return;
+        }
         throw new Error(error.error || "Transformation failed");
       }
 

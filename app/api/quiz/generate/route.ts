@@ -63,7 +63,7 @@ export async function POST(req: Request) {
 
     const pineconeInitialized = await initPinecone();
     
-    const { userId } = auth();
+    const { userId } = await auth();
     const user = await currentUser();
     
     const quiz = await prisma.quiz.create({

@@ -23,7 +23,7 @@ type AiEntityWithRelations = (
 );
 
 const ChatIdPage = async ({ params }: ChatIdPageProps) => {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     return redirect("/sign-in");

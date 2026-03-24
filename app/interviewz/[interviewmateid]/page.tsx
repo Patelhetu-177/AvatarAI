@@ -14,7 +14,7 @@ interface InterviewMateIdPageProps {
 }
 
 const InterviewMatePage = async ({ params }: InterviewMateIdPageProps) => {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     return redirect("/sign-in");

@@ -5,6 +5,7 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/firebase/admin";
 import { inngest } from "@/lib/inngest/client";
 
+
 interface SignUpParams {
   uid: string;
   name: string;
@@ -57,14 +58,15 @@ export async function signUp(params: SignUpParams) {
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  const { userId } = auth();
+  const { userId } = await auth();
+  const client = await clerkClient()
 
   if (!userId) {
     return null;
   }
 
   try {
-    const clerkUser = await clerkClient.users.getUser(userId);
+    const clerkUser = await client.users.getUser(userId);
     const userRecord = await db.collection("users").doc(userId).get();
     if (!userRecord.exists) {
       const name = clerkUser.firstName || "User";

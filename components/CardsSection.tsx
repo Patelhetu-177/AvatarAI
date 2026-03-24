@@ -15,13 +15,13 @@ const slides = [
       "Engage in personalized conversations with your favorite celebrities, historical figures, or fictional characters.",
   },
   {
-  title: "AI Quiz Challenge",
-  button: "Begin Quiz",
-  src: "/quiz-image.png",
-  route: "/quiz",
-  content:
-    "Test your knowledge against our AI-powered quiz system. Get instant feedback and learn as you go!",
-},
+    title: "AI Quiz Challenge",
+    button: "Begin Quiz",
+    src: "/quiz-image.png",
+    route: "/quiz",
+    content:
+      "Test your knowledge against our AI-powered quiz system. Get instant feedback and learn as you go!",
+  },
   {
     title: "Learn a New Skill",
     button: "Start Learning",
@@ -39,13 +39,13 @@ const slides = [
       "Practice with an AI that provides real-time feedback on your answers and helps you prepare for any interview.",
   },
   {
-  title: "DocHub",
-  button: "Start Chat",
-  src: "/dochub.png",
-  route: "/documents",
-  content:
-    "Chat with your documents using AI-powered retrieval. Upload files, ask questions, and get accurate, cited answers instantly.",
-},
+    title: "DocHub",
+    button: "Start Chat",
+    src: "/dochub.png",
+    route: "/documents",
+    content:
+      "Chat with your documents using AI-powered retrieval. Upload files, ask questions, and get accurate, cited answers instantly.",
+  },
 
   {
     title: "Resume Analyzer",
@@ -54,6 +54,15 @@ const slides = [
     route: "/resume-analyzer",
     content:
       "Upload your resume and receive instant, AI-powered analysis with actionable feedback to improve your chances of landing your dream job.",
+  },
+
+  {
+    title: "Image Studio",
+    button: "Transform Image",
+    src: "/image-studio.png",
+    route: "/image-studio",
+    content:
+      "Enhance, edit, or create images with AI-powered tools. Instantly remove backgrounds, apply creative effects, and generate unique visuals for your projects.",
   },
 ];
 

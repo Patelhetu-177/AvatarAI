@@ -57,7 +57,7 @@ export async function DELETE(
   { params }: { params: { interviewMateId: string } }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthenticated", { status: 401 });

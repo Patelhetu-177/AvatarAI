@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
-import prismadb from "@/lib/prismadb";
+import { getImageTransformCount, incrementImageTransform } from "@/lib/usage";
+import { auth } from "@clerk/nextjs/server";
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -18,6 +19,23 @@ export async function POST(req: NextRequest) {
       userId = "demo-user",
       action = "transform",
     } = body;
+
+    if (!userId || userId === "demo-user") {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    }
+
+    const { has, userId: authUserId } = await auth();
+    const usageCount = await getImageTransformCount(userId);
+    const isPro = has({ plan: "pro" });
+    if (!isPro && usageCount >= 1) {
+      return new Response(
+        JSON.stringify({
+          error: "Free quota exceeded. Upgrade to Pro for unlimited image transforms.",
+          upgradeRequired: true,
+        }),
+        { status: 402 },
+      );
+    }
 
     if (!imageUrl) {
       return new Response(JSON.stringify({ error: "Image URL required" }), {
@@ -56,14 +74,8 @@ export async function POST(req: NextRequest) {
 
     let record = null;
     try {
-      record = await prismadb.transformationHistory.create({
-        data: {
-          userId,
-          action,
-          details: transformation ? JSON.stringify(transformation) : null,
-          url: result.secure_url,
-        },
-      });
+      await incrementImageTransform(userId, result.secure_url);
+      record = true;
     } catch (dbError: unknown) {
       if (dbError instanceof Error) {
         console.warn("Database unavailable, skipping save:", dbError.message);

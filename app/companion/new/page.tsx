@@ -4,7 +4,7 @@ import { CompanionForm } from "../components/companion-form";
 import { auth } from "@clerk/nextjs/server";
 
 const CompanionCreatePage = async () => {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     return redirect("/sign-in");

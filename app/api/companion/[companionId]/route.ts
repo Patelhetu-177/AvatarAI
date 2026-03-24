@@ -54,7 +54,7 @@ export async function DELETE(
   { params }: { params: { companionId: string } }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthenticated", { status: 401 });

@@ -14,7 +14,7 @@ import {
 } from "@/lib/actions/general.action";
 
 async function SkillWise() {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     redirect("/sign-in");
