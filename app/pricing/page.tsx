@@ -1,9 +1,8 @@
 "use client";
 
 import { PricingTable } from "@clerk/nextjs";
-import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Shield, Globe, Check } from "lucide-react";
-import { useState } from "react";
+import { motion } from "framer-motion";
+import { Zap, Shield, Globe } from "lucide-react";
 
 const features = [
   {
@@ -24,8 +23,6 @@ const features = [
 ];
 
 export default function PricingPage() {
-  const [isYearly, setIsYearly] = useState(false);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-24 pb-16 px-4">
       {/* Hero Section */}
@@ -36,7 +33,7 @@ export default function PricingPage() {
           transition={{ delay: 0.3, duration: 0.8 }}
           className="mt-6 text-gray-700 dark:text-gray-300 text-lg md:text-xl max-w-xl mx-auto"
         >
-          Start free. Upgrade when you're ready. No hidden costs.
+          Start free. Upgrade when you&apos;re ready. No hidden costs.
         </motion.p>
       </div>
 
@@ -92,7 +89,6 @@ export default function PricingPage() {
         ))}
       </motion.div>
 
-      {/* Footer Note */}
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

@@ -16,15 +16,14 @@ export async function POST(req: NextRequest) {
       imageUrl,
       transformation,
       format = "png",
-      userId = "demo-user",
-      action = "transform",
+      userId = "demo-user"
     } = body;
 
     if (!userId || userId === "demo-user") {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
 
-    const { has, userId: authUserId } = await auth();
+     const { has } = await auth();
     const usageCount = await getImageTransformCount(userId);
     const isPro = has({ plan: "pro" });
     if (!isPro && usageCount >= 1) {
