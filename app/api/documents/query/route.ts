@@ -33,7 +33,7 @@ Answer the question based on the context above. If the context doesn't contain r
 
 export async function POST(req: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }

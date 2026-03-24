@@ -1,13 +1,19 @@
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
+import { redirect } from "next/navigation";
+import { currentUser } from "@clerk/nextjs/server";
 
-export default function ImageStudioLayout({ children }: { children: React.ReactNode }) {
+export default async function ImageStudioLayout({ children }: { children: React.ReactNode }) {
+  const user = await currentUser();
+  if (!user) {
+    redirect("/sign-in");
+  }
   return (
     <div className="h-full">
       <Navbar />
-      <div className="hidden md:flex mt-16 w-20 flex-col fixed insert-y-0">
+      <div className="hidden md:flex mt-16 w-20 flex-col fixed inset-y-0">
         <Sidebar />
-      </div>    
+      </div>
       <main className="md:pl-20 pt-16 h-full bg-secondary">
         {children}
       </main>

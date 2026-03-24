@@ -61,7 +61,19 @@ export default function ResumeAnalyzerPage() {
         body: formData,
       });
 
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const error = await res.json();
+        if (error.upgradeRequired) {
+          toast({
+            title: "Upgrade Required",
+            description: "Free quota exceeded. Upgrade to Pro for unlimited resume analyses.",
+            variant: "destructive",
+          });
+          setError("Free quota exceeded. Upgrade to Pro for unlimited resume analyses.");
+          return;
+        }
+        throw new Error();
+      }
 
       const data = await res.json();
       setResult(data.result);

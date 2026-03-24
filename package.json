@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.22",
-    "@clerk/nextjs": "^5.7.2",
+    "@clerk/nextjs": "^7.0.6",
     "@formspree/react": "^2.5.1",
     "@google/genai": "^1.46.0",
     "@headlessui/react": "^2.2.4",

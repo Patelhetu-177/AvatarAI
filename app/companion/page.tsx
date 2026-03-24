@@ -18,7 +18,7 @@ interface CompanionsPageProps {
 }
 
 const CompanionsPage = async ({ searchParams }: CompanionsPageProps) => {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     return redirect("/sign-in");

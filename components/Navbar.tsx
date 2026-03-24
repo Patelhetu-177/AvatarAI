@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { SignInButton, UserButton, Show, SignUpButton } from "@clerk/nextjs";
 import { Button } from "./ui/button";
 import { MobileSidebar } from "./mobile-sidebar";
 import { ModeToggle } from "./mode-toggle";
@@ -24,7 +24,7 @@ export const Navbar = () => {
           <h1
             className={cn(
               "hidden md:block text-xl md:text-3xl font-bold text-primary",
-              font.className
+              font.className,
             )}
           >
             Avatar<span className="text-green-600">AI</span>
@@ -33,18 +33,24 @@ export const Navbar = () => {
       </div>
 
       <div className="flex items-center gap-x-3">
-        <Button size="sm" variant="premium">
-          UpGrade
-          <Sparkles className="h-4 w-4 fill-white text-white ml-2" />
-        </Button>
+        <Link href="/pricing">
+          <Button size="sm" variant="premium">
+            UpGrade
+            <Sparkles className="h-4 w-4 fill-white text-white ml-2" />
+          </Button>
+        </Link>
         <ModeToggle />
-        <SignedOut>
+        <Show when="signed-out">
           <SignInButton />
-        </SignedOut>
-
-        <SignedIn>
-          <UserButton/>
-        </SignedIn>
+          <SignUpButton>
+            <button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
+              Sign Up
+            </button>
+          </SignUpButton>
+        </Show>
+        <Show when="signed-in">
+          <UserButton />
+        </Show>
       </div>
     </div>
   );

@@ -9,7 +9,9 @@ ABOUT AVATARIAI — FULL FEATURE SET:
 4. **SkillSphere(AI Voice Agent Mock Interviews)** — Real interview simulations with speech-to-text & text-to-speech powered by Gemini 2.0 Flash. Speak answers naturally, get instant AI evaluation & sharpen your confidence
 5. **AI-Generated Quizzes** — Create topic-based quizzes on any subject, get evaluated instantly, see your score, and receive personalized improvement suggestions
 6. **DocHUB(Document Chat)** — Upload Word, PDF, or Excel files and ask questions about the content to get instant, intelligent answers
-7. **15+ Languages Supported** — English, Hindi, Gujarati, Marathi, Spanish, German, French, Italian, Russian, Chinese, Japanese, Arabic, Telugu, Tamil & more
+7. **Resume Analyzer** — Upload your resume for instant, AI-powered feedback and actionable suggestions to help you stand out
+8. **Image Studio** — AI-powered image transformation and editing for creative projects, profile pictures, and more
+9. **15+ Languages Supported** — English, Hindi, Gujarati, Marathi, Spanish, German, French, Italian, Russian, Chinese, Japanese, Arabic, Telugu, Tamil & more
 
 TONE & STYLE:
 - Exciting, bold, and fun — make the user feel like they just unlocked a superpower
@@ -95,20 +97,24 @@ BOTTOM LINE BLOCK:
 SECTION DIVIDER:
 <div style="border-top: 1px solid #374151; margin: 28px 0 20px 0;"></div>
 
+
 CONTENT REQUIREMENTS:
-- Cover ALL 6 core AvatarAI features exactly once each:
+- Cover ALL 8 core AvatarAI features exactly once each:
   1) Chat with iconic AI avatars
   2) Create custom companions
   3) AI mock interviews
   4) InterviewMate structured Q&A
   5) AI-generated quizzes
   6) Chat with uploaded documents
+  7) Resume Analyzer
+  8) Image Studio
 - Do not repeat a feature heading
 - Keep language simple, direct, and conversational
 - Focus on practical value and real outcomes
 - Avoid hype-only writing; each feature needs useful specifics
 - Mention that AvatarAI supports 15+ languages near the end
 - End with a short motivating paragraph encouraging users to visit AvatarAI
+
 
 VOICE & STYLE:
 - Friendly and helpful, not robotic
