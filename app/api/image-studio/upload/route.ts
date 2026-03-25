@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import prismadb from "@/lib/prismadb";
+import { auth } from "@clerk/nextjs/server";
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -10,6 +11,14 @@ cloudinary.config({
 
 export async function POST(req: NextRequest) {
   try {
+    const { userId: authenticatedUserId } = await auth();
+
+    if (!authenticatedUserId) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
     const body = await req.json();
     console.log("Upload request received:", {
       hasImageData: !!body.imageData,
@@ -18,7 +27,13 @@ export async function POST(req: NextRequest) {
       imageDataLength: body.imageData?.length,
     });
 
-    const { imageData, userId = "demo-user", fileName = "image" } = body;
+    const { imageData, userId, fileName = "image" } = body;
+
+    if (userId !== authenticatedUserId) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 403,
+      });
+    }
 
     if (!imageData) {
       console.error("No image data provided");
@@ -72,9 +87,8 @@ export async function POST(req: NextRequest) {
         { status: 500 },
       );
     }
-    return new Response(
-      JSON.stringify({ error: "Upload failed" }),
-      { status: 500 },
-    );
+    return new Response(JSON.stringify({ error: "Upload failed" }), {
+      status: 500,
+    });
   }
 }

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import toast, { Toaster } from "react-hot-toast";
+import { useUser } from "@clerk/nextjs";
 
 const Icon = () => (
   <span className="w-5 h-5 bg-gradient-to-tr from-purple-400 to-blue-400 rounded" />
@@ -141,7 +142,6 @@ export default function ImageStudioDashboard() {
     });
   };
 
-  // Handle resize height change with aspect ratio lock
   const handleResizeHeightChange = (newHeight: number) => {
     const { aspectLocked, aspectRatio, width } = transformParams.resize;
     let newWidth = width;
@@ -159,7 +159,6 @@ export default function ImageStudioDashboard() {
     });
   };
 
-  // Apply resize preset
   const applyResizePreset = (preset: {
     ratio: number;
     width: number;
@@ -177,7 +176,6 @@ export default function ImageStudioDashboard() {
     });
   };
 
-  // Apply crop preset
   const applyCropPreset = (preset: { ratio: number | null }) => {
     if (preset.ratio === null) {
       setTransformParams({
@@ -199,7 +197,6 @@ export default function ImageStudioDashboard() {
     }
   };
 
-  // Handle crop width change
   const handleCropWidthChange = (newWidth: number) => {
     const { aspectRatio } = transformParams.crop;
     let newHeight = transformParams.crop.height;
@@ -214,7 +211,6 @@ export default function ImageStudioDashboard() {
     });
   };
 
-  // Handle crop height change
   const handleCropHeightChange = (newHeight: number) => {
     const { aspectRatio } = transformParams.crop;
     let newWidth = transformParams.crop.width;
@@ -229,7 +225,6 @@ export default function ImageStudioDashboard() {
     });
   };
 
-  // Initialize canvas crop
   const initCanvasCrop = () => {
     if (!imageUrl) return;
 
@@ -265,7 +260,6 @@ export default function ImageStudioDashboard() {
     img.src = imageUrl;
   };
 
-  // Handle mouse down on canvas
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!cropCanvasRef.current) return;
     const rect = cropCanvasRef.current.getBoundingClientRect();
@@ -277,7 +271,6 @@ export default function ImageStudioDashboard() {
     setIsDragging(true);
   };
 
-  // Handle mouse move on canvas
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDragging || !cropCanvasRef.current || !canvasImage) return;
 
@@ -366,7 +359,6 @@ export default function ImageStudioDashboard() {
       y: originalY,
     });
 
-    // Reset crop mode
     setCropMode(false);
     setCropRect({ x: 0, y: 0, width: 0, height: 0 });
   };
@@ -377,12 +369,14 @@ export default function ImageStudioDashboard() {
     setIsDragging(false);
   };
 
-  // const [showUpload, setShowUpload] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const userId = "demo-user";
+  const { user } = useUser();
+  const userId = user?.id;
 
   useEffect(() => {
-    fetchHistory();
+    if (userId) {
+      fetchHistory();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
@@ -434,6 +428,11 @@ export default function ImageStudioDashboard() {
 
   const processFile = async (file: File) => {
     if (!file) return;
+
+    if (!userId) {
+      toast.error("Please sign in to upload images");
+      return;
+    }
 
     setUploading(true);
 
@@ -562,6 +561,11 @@ export default function ImageStudioDashboard() {
       return;
     }
 
+    if (!userId) {
+      toast.error("Please sign in to apply transformations");
+      return;
+    }
+
     if (transforming) return;
 
     setTransforming(true);
@@ -585,7 +589,9 @@ export default function ImageStudioDashboard() {
       if (!res.ok) {
         const error = await res.json();
         if (error.upgradeRequired) {
-          toast.error("Free quota exceeded. Upgrade to Pro for unlimited image transforms.");
+          toast.error(
+            "Free quota exceeded. Upgrade to Pro for unlimited image transforms.",
+          );
           return;
         }
         throw new Error(error.error || "Transformation failed");
