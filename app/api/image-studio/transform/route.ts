@@ -11,25 +11,30 @@ cloudinary.config({
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const {
-      imageUrl,
-      transformation,
-      format = "png",
-      userId = "demo-user"
-    } = body;
+    const { userId: authenticatedUserId, has } = await auth();
 
-    if (!userId || userId === "demo-user") {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    if (!authenticatedUserId) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
     }
 
-     const { has } = await auth();
+    const body = await req.json();
+    const { imageUrl, transformation, format = "png", userId } = body;
+
+    if (userId !== authenticatedUserId) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 403,
+      });
+    }
+
     const usageCount = await getImageTransformCount(userId);
     const isPro = has({ plan: "pro" });
     if (!isPro && usageCount >= 1) {
       return new Response(
         JSON.stringify({
-          error: "Free quota exceeded. Upgrade to Pro for unlimited image transforms.",
+          error:
+            "Free quota exceeded. Upgrade to Pro for unlimited image transforms.",
           upgradeRequired: true,
         }),
         { status: 402 },
@@ -43,7 +48,6 @@ export async function POST(req: NextRequest) {
     }
 
     const transformations: Record<string, unknown>[] = [];
-    // Handle effects array (for adjustments like brightness, contrast, etc.)
     if (transformation?.effects && Array.isArray(transformation.effects)) {
       transformation.effects.forEach((effect: string) => {
         transformations.push({ effect: effect });
@@ -99,9 +103,8 @@ export async function POST(req: NextRequest) {
         { status: 500 },
       );
     }
-    return new Response(
-      JSON.stringify({ error: "Transformation failed" }),
-      { status: 500 },
-    );
+    return new Response(JSON.stringify({ error: "Transformation failed" }), {
+      status: 500,
+    });
   }
 }

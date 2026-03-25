@@ -66,10 +66,13 @@ export default function ResumeAnalyzerPage() {
         if (error.upgradeRequired) {
           toast({
             title: "Upgrade Required",
-            description: "Free quota exceeded. Upgrade to Pro for unlimited resume analyses.",
+            description:
+              "Free quota exceeded. Upgrade to Pro for unlimited resume analyses.",
             variant: "destructive",
           });
-          setError("Free quota exceeded. Upgrade to Pro for unlimited resume analyses.");
+          setError(
+            "Free quota exceeded. Upgrade to Pro for unlimited resume analyses.",
+          );
           return;
         }
         throw new Error();
@@ -99,8 +102,19 @@ export default function ResumeAnalyzerPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="space-y-2 mb-2">
           <h1 className="text-4xl font-bold flex items-center gap-2 text-black dark:text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-9 w-9 text-purple-500 drop-shadow-md">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25M6.5 5.5l1.5 1.5M3 12h2.25M5.5 17.5l1.5-1.5M12 18.75V21M17.5 17.5l-1.5-1.5M18.75 12H21M17.5 6.5l-1.5 1.5M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="h-9 w-9 text-purple-500 drop-shadow-md"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 3v2.25M6.5 5.5l1.5 1.5M3 12h2.25M5.5 17.5l1.5-1.5M12 18.75V21M17.5 17.5l-1.5-1.5M18.75 12H21M17.5 6.5l-1.5 1.5M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z"
+              />
             </svg>
             AI Resume Analyzer
           </h1>
@@ -137,13 +151,14 @@ export default function ResumeAnalyzerPage() {
               {/* File Preview */}
               {file && (
                 <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
-                  <span className="text-sm truncate text-black dark:text-white">{file.name}</span>
+                  <span className="text-sm truncate text-black dark:text-white">
+                    {file.name}
+                  </span>
                   <span className="text-xs text-gray-500 dark:text-gray-300">
                     {(file.size / 1024).toFixed(1)} KB
                   </span>
                 </div>
               )}
-              {/* Button */}
               <Button
                 onClick={handleSubmit}
                 disabled={!file || isUploading}
@@ -155,9 +170,7 @@ export default function ResumeAnalyzerPage() {
                     Analyzing...
                   </>
                 ) : (
-                  <>
-                    Analyze Resume
-                  </>
+                  <>Analyze Resume</>
                 )}
               </Button>
               {error && (
@@ -168,7 +181,9 @@ export default function ResumeAnalyzerPage() {
           {/* RIGHT - RESULT */}
           <Card className="p-6 rounded-2xl shadow-md border bg-white dark:bg-neutral-900/80 backdrop-blur h-[80vh] overflow-y-auto">
             <CardHeader>
-              <CardTitle className="text-black dark:text-white">Resume Review</CardTitle>
+              <CardTitle className="text-black dark:text-white">
+                Resume Review
+              </CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-400">
                 {result
                   ? "Detailed feedback below"

@@ -4,7 +4,6 @@ import { loadDocument } from "@/lib/document-loader";
 import { formatDocumentContent } from "@/lib/utils/documentFormatter";
 import { generateGeminiResumeReview } from "@/lib/utils/geminiResumeReview";
 
-
 export async function POST(req: Request) {
   try {
     const { userId } = await auth();

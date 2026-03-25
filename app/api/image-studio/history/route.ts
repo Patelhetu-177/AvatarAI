@@ -1,9 +1,25 @@
 import { NextRequest } from "next/server";
 import prismadb from "@/lib/prismadb";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(req: NextRequest) {
   try {
+    const { userId: authenticatedUserId } = await auth();
+
+    if (!authenticatedUserId) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
     const { userId, action, details, url, date } = await req.json();
+
+    if (userId !== authenticatedUserId) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 403,
+      });
+    }
+
     if (!userId || !action || !url) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
@@ -34,8 +50,23 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    const { userId: authenticatedUserId } = await auth();
+
+    if (!authenticatedUserId) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
     const { searchParams } = new URL(req.url!);
     const userId = searchParams.get("userId");
+
+    if (userId !== authenticatedUserId) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 403,
+      });
+    }
+
     if (!userId) {
       return new Response(JSON.stringify({ error: "Missing userId" }), {
         status: 400,
@@ -71,6 +102,14 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const { userId: authenticatedUserId } = await auth();
+
+    if (!authenticatedUserId) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
@@ -81,6 +120,23 @@ export async function DELETE(req: NextRequest) {
     }
 
     try {
+      const item = await prismadb.transformationHistory.findUnique({
+        where: { id },
+        select: { userId: true },
+      });
+
+      if (!item) {
+        return new Response(JSON.stringify({ error: "Item not found" }), {
+          status: 404,
+        });
+      }
+
+      if (item.userId !== authenticatedUserId) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 403,
+        });
+      }
+
       await prismadb.transformationHistory.delete({
         where: { id },
       });
@@ -109,6 +165,14 @@ export async function DELETE(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const { userId: authenticatedUserId } = await auth();
+
+    if (!authenticatedUserId) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
     const { id, like } = await req.json();
 
     if (!id) {
@@ -118,6 +182,23 @@ export async function PATCH(req: NextRequest) {
     }
 
     try {
+      const item = await prismadb.transformationHistory.findUnique({
+        where: { id },
+        select: { userId: true },
+      });
+
+      if (!item) {
+        return new Response(JSON.stringify({ error: "Item not found" }), {
+          status: 404,
+        });
+      }
+
+      if (item.userId !== authenticatedUserId) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 403,
+        });
+      }
+
       const record = await prismadb.transformationHistory.update({
         where: { id },
         data: {
