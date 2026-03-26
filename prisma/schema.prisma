@@ -159,6 +159,8 @@ model UserPreference {
   userId          String   @unique
   email           String   @unique
   emailSubscribed Boolean  @default(true)
+  theme           String   @default("system")
+  showPricing     Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

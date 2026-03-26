@@ -2,7 +2,9 @@
 
 import { PricingTable } from "@clerk/nextjs";
 import { motion } from "framer-motion";
-import { Zap, Shield, Globe } from "lucide-react";
+import { Zap, Shield, Globe, ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 const features = [
   {
@@ -23,10 +25,17 @@ const features = [
 ];
 
 export default function PricingPage() {
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-24 pb-16 px-4">
       {/* Hero Section */}
       <div className="text-center max-w-3xl mx-auto mb-16">
+        <h1 className="text-lg md:text-7xl text-center font-sans font-bold mb-8 text-black dark:text-white">
+          <Button onClick={() => router.back()} size="icon" variant="ghost">
+            <ChevronLeft className="h-12 w-12" />
+          </Button>
+          Pricing
+        </h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
