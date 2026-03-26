@@ -1,26 +1,24 @@
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
-import { getCurrentUser } from "@/lib/actions/auth.action";
+import { auth } from "@clerk/nextjs/server";
 
 const RootLayout = async ({
-    children
+    children,
 }: {
     children: React.ReactNode;
 }) => {
-    // Ensures new users get a Firestore record + welcome email event
-    await getCurrentUser();
+    const { has } = await auth();
+    const plan = has({ plan: "pro" }) ? "pro" : "free";
 
     return (
         <div className="h-full">
-            <Navbar/>
+            <Navbar plan={plan} />
             <div className="hidden md:flex mt-16 w-20 flex-col fixed insert-y-0">
-                <Sidebar/>
+                <Sidebar />
             </div>
-            <main className="md:pl-20 pt-16 h-full">
-            {children}
-            </main>
+            <main className="md:pl-20 pt-16 h-full">{children}</main>
         </div>
-    )
-}
+    );
+};
 
-export default RootLayout
+export default RootLayout;

@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import {
-  ClerkProvider,
-} from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
-import {  ZyraAIAgentWrapper } from "@/components/ZyraAIAgentWrapper";
+import { ZyraAIAgentWrapper } from "@/components/ZyraAIAgentWrapper";
+import { UserSettingsProvider } from "@/components/user-settings-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -30,9 +29,11 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
-            <Toaster />
-            <ZyraAIAgentWrapper  />
+            <UserSettingsProvider>
+              {children}
+              <Toaster />
+              <ZyraAIAgentWrapper />
+            </UserSettingsProvider>
           </ThemeProvider>
         </body>
       </html>
