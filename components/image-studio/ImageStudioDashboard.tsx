@@ -706,41 +706,52 @@ export default function ImageStudioDashboard() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-screen">
       <Toaster position="top-center" />
-      <div className="flex flex-1">
+      <div className="flex flex-1 flex-col md:flex-row">
         {/* SIDEBAR */}
-        <aside className="w-72 bg-white/70 dark:bg-[#23243a]/70 p-6 border-r">
-          {tools.map((section, idx) => (
-            <div key={section.label}>
-              <h3 className="text-xs font-bold mb-2">{section.label}</h3>
-
-              {section.items.map((tool) => (
-                <button
-                  key={tool}
-                  onClick={() => openTransformationPanel(tool)}
-                  disabled={transforming || !imageUrl}
-                  className={cn(
-                    "flex items-center gap-3 w-full p-2 rounded transition-colors",
-                    transforming || !imageUrl
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-purple-100 dark:hover:bg-purple-900/30",
-                    activePanel === tool &&
-                      "bg-purple-100 dark:bg-purple-900/30",
-                  )}
+        <aside className="w-full md:w-72 bg-white/70 dark:bg-[#23243a]/70 p-4 md:p-6 border-b md:border-b-0 md:border-r flex-shrink-0">
+          <div className="flex flex-col gap-4 md:gap-0">
+            {tools.map((section, idx) => (
+              <div
+                key={section.label}
+                className="mb-2 md:mb-0 md:mr-0 rounded-xl shadow-sm bg-white/90 dark:bg-[#23243a]/90 border border-gray-200 dark:border-gray-700 px-3 py-2 md:bg-transparent md:dark:bg-transparent md:border-0"
+              >
+                <h3
+                  className="text-xs font-bold mb-2 md:mb-2 md:mt-0 mt-2 text-purple-700 dark:text-purple-300 tracking-wide sticky top-0 z-10 bg-white/90 dark:bg-[#23243a]/90 md:bg-transparent md:dark:bg-transparent md:static md:z-auto md:rounded-none"
+                  style={{ WebkitBackdropFilter: 'blur(2px)', backdropFilter: 'blur(2px)' }}
                 >
-                  <Icon />
-                  <span>{tool}</span>
-                </button>
-              ))}
-
-              {idx !== tools.length - 1 && <Separator className="my-4" />}
-            </div>
-          ))}
+                  {section.label}
+                </h3>
+                <div className="flex flex-col gap-2">
+                  {section.items.map((tool) => (
+                    <button
+                      key={tool}
+                      onClick={() => openTransformationPanel(tool)}
+                      disabled={transforming || !imageUrl}
+                      className={cn(
+                        "flex items-center gap-3 w-full p-3 rounded-lg transition-colors text-base font-medium border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#23243a] shadow-sm md:shadow-none md:bg-transparent md:dark:bg-transparent md:border-0 md:text-base md:p-2 md:rounded",
+                        transforming || !imageUrl
+                          ? "opacity-50 cursor-not-allowed"
+                          : "hover:bg-purple-100 dark:hover:bg-purple-900/30",
+                        activePanel === tool &&
+                          "bg-purple-100 dark:bg-purple-900/30 border-purple-400 dark:border-purple-700",
+                      )}
+                      style={{ minHeight: 44 }}
+                    >
+                      <Icon />
+                      <span>{tool}</span>
+                    </button>
+                  ))}
+                </div>
+                {idx !== tools.length - 1 && <Separator className="my-4 md:my-4" />}
+              </div>
+            ))}
+          </div>
         </aside>
 
         {/* MAIN */}
-        <main className="flex-1 flex flex-col items-center justify-center p-10">
+        <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 md:p-10 w-full">
           {/* Drag & Drop Upload Zone */}
           <div
             onDragEnter={handleDrag}
@@ -749,7 +760,7 @@ export default function ImageStudioDashboard() {
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
             className={cn(
-              "w-full max-w-2xl border-2 border-dashed rounded-xl p-12 transition-all cursor-pointer",
+              "w-full max-w-2xl border-2 border-dashed rounded-xl p-6 sm:p-8 md:p-12 transition-all cursor-pointer",
               dragActive
                 ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 scale-105"
                 : "border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:bg-gray-50 dark:hover:bg-gray-800/50",
@@ -808,7 +819,7 @@ export default function ImageStudioDashboard() {
 
           {/* Image Details */}
           {imageMetadata && (
-            <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border w-full max-w-2xl">
+            <div className="mt-4 p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg border w-full max-w-2xl">
               <h3 className="text-sm font-semibold mb-2">Image Details</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
@@ -834,7 +845,7 @@ export default function ImageStudioDashboard() {
           )}
 
           {/* Format */}
-          <div className="mt-6 flex items-center gap-3">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             <label className="text-sm font-medium">Output Format:</label>
             <select
               className="p-2 border rounded-lg bg-white dark:bg-gray-800"
@@ -849,7 +860,7 @@ export default function ImageStudioDashboard() {
 
           {/* Transformation Panels */}
           {activePanel && (
-            <div className="mt-6 p-6 bg-white dark:bg-gray-800 rounded-lg border w-full max-w-2xl shadow-lg">
+            <div className="mt-6 p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-lg border w-full max-w-2xl shadow-lg">
               {activePanel === "Crop" && (
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Crop Image</h3>
@@ -1788,7 +1799,7 @@ export default function ImageStudioDashboard() {
           {/* Canvas */}
           {imageUrl && (
             <div className="w-full max-w-2xl mt-6">
-              <div className="h-[400px] bg-white dark:bg-gray-800 flex items-center justify-center rounded-xl shadow-lg border">
+              <div className="h-[220px] xs:h-[260px] sm:h-[320px] md:h-[400px] bg-white dark:bg-gray-800 flex items-center justify-center rounded-xl shadow-lg border">
                 {transforming ? (
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-2"></div>
@@ -1805,7 +1816,7 @@ export default function ImageStudioDashboard() {
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-4 grid grid-cols-3 gap-2">
+              <div className="mt-4 grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2">
                 <Button
                   onClick={() => handleDownload(imageUrl)}
                   variant="outline"
@@ -1913,8 +1924,8 @@ export default function ImageStudioDashboard() {
       </div>
 
       {/* HISTORY GALLERY */}
-      <div className="p-6 border-t bg-gradient-to-b from-white/50 to-transparent dark:from-[#23243a]/50">
-        <div className="flex items-center justify-between mb-4">
+      <div className="p-4 sm:p-6 border-t bg-gradient-to-b from-white/50 to-transparent dark:from-[#23243a]/50">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
           <h2 className="text-lg font-semibold">History</h2>
 
           {usingLocalStorage && (
@@ -1937,11 +1948,11 @@ export default function ImageStudioDashboard() {
         </div>
 
         {history.filter((item) => item.action !== "upload").length === 0 ? (
-          <div className="text-center p-8 text-gray-500">
+          <div className="text-center p-6 sm:p-8 text-gray-500">
             No saved images yet. Transform and save an image to see it here!
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
             {history
               .filter((item) => item.action !== "upload")
               .map((typedItem) => {
