@@ -1,7 +1,6 @@
 "use server";
 
 import { db } from "@/firebase/admin";
-import prismadb from "@/lib/prismadb";
 
 export interface UserForMonthlyEmail {
   id: string;
@@ -24,19 +23,7 @@ const deriveNameFromEmail = (email: string) => {
 
 export const getAllUsersForMonthlyEmail = async (): Promise<UserForMonthlyEmail[]> => {
   try {
-    const [usersSnapshot, unsubscribed] = await Promise.all([
-      db.collection("users").get(),
-      prismadb.userPreference.findMany({
-        where: { emailSubscribed: false },
-        select: { email: true },
-      }),
-    ]);
-
-    const unsubscribedSet = new Set(
-      unsubscribed
-        .map((item) => item.email?.trim().toLowerCase())
-        .filter((email): email is string => !!email),
-    );
+    const usersSnapshot = await db.collection("users").get();
 
     return usersSnapshot.docs
       .map((doc) => {
@@ -50,10 +37,7 @@ export const getAllUsersForMonthlyEmail = async (): Promise<UserForMonthlyEmail[
           name: name || (email ? deriveNameFromEmail(email) : "there"),
         };
       })
-      .filter(
-        (user): user is UserForMonthlyEmail =>
-          !!user.email && !unsubscribedSet.has(user.email.toLowerCase()),
-      );
+      .filter((user): user is UserForMonthlyEmail => !!user.email);
   } catch (e) {
     console.error("Error fetching users for monthly email:", e);
     return [];
