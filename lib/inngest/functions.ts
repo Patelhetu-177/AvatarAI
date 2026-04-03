@@ -72,14 +72,15 @@ export const sendSignUpEmailAvatarAI = inngest.createFunction(
 export const sendMonthlyExploreEmail = inngest.createFunction(
   { id: "send-monthly-explore-email-AvatarAI" },
   [{ event: "app/send.monthly.explore" }, { cron: "30 6 1 * *" }], // 12 PM IST on 1st day of each month
+  // [{ event: "app/send.monthly.explore" }, { cron: "*/5 * * * *" }], // Every 5 minutes for testing
   async ({ step }) => {
     const users = await step.run(
-      "get-subscribed-users",
+      "get-registered-users",
       getAllUsersForMonthlyEmail,
     );
 
     if (!users.length) {
-      return { success: false, message: "No subscribed users found" };
+      return { success: false, message: "No registered users found" };
     }
 
     const usersWithContent = await step.run(
